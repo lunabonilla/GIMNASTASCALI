@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,9 +10,9 @@ type StaffProfile = {
 };
 
 const navigation = [
-  { label: "Inicio", icon: "⌂", active: true },
+  { label: "Inicio", icon: "⌂", active: true, href: "/" },
   { label: "Clases de prueba", icon: "◇" },
-  { label: "Gimnastas", icon: "○" },
+  { label: "Gimnastas", icon: "○", href: "/gimnastas" },
   { label: "Grupos y horarios", icon: "▦" },
   { label: "Asistencia", icon: "✓" },
   { label: "Cartera y pagos", icon: "$" },
@@ -127,8 +128,8 @@ export default async function Home() {
 
         <nav aria-label="Navegación principal">
           {navigation.map((item) => (
-            <a
-              href="#"
+            <Link
+              href={item.href ?? "#"}
               className={`nav-item ${item.active ? "active" : ""}`}
               key={item.label}
             >
@@ -136,7 +137,7 @@ export default async function Home() {
                 {item.icon}
               </span>
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
