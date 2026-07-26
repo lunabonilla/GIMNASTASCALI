@@ -1,4 +1,12 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+type StaffProfile = {
+  full_name: string;
+  role: "superadmin" | "administration" | "coach";
+  active: boolean;
+};
 
 const navigation = [
   { label: "Inicio", icon: "⌂", active: true },
@@ -63,7 +71,46 @@ const modules = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+
+  if (error || !data?.claims) {
+    redirect("/login");
+  }
+
+  const { data: profileData } = await supabase
+    .from("staff_profiles")
+    .select("full_name, role, active")
+    .single();
+  const profile = profileData as StaffProfile | null;
+
+  if (!profile?.active) {
+    redirect("/login?error=Tu+usuario+no+tiene+acceso+activo");
+  }
+
+  async function signOut() {
+    "use server";
+
+    const serverSupabase = await createClient();
+    await serverSupabase.auth.signOut();
+    redirect("/login");
+  }
+
+  const displayRole =
+    profile.role === "superadmin"
+      ? "Superadministradora"
+      : profile.role === "administration"
+        ? "Administración"
+        : "Profesora";
+
+  const initials = profile.full_name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -94,12 +141,16 @@ export default function Home() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="avatar">LB</div>
+          <div className="avatar">{initials}</div>
           <div>
-            <strong>Luna Bonilla</strong>
-            <span>Superadministradora</span>
+            <strong>{profile.full_name}</strong>
+            <span>{displayRole}</span>
           </div>
-          <button aria-label="Abrir configuración">•••</button>
+          <form action={signOut}>
+            <button aria-label="Cerrar sesión" title="Cerrar sesión">
+              ↪
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -107,7 +158,7 @@ export default function Home() {
         <header className="topbar">
           <div>
             <p className="eyebrow">Domingo, 26 de julio</p>
-            <h1>Hola, Luna</h1>
+            <h1>Hola, {profile.full_name.split(" ")[0]}</h1>
           </div>
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Notificaciones">
