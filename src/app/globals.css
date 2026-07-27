@@ -185,6 +185,31 @@ th {
   font-weight: 800;
 }
 
+.status-chip.pending {
+  color: #956115;
+  background: #fff3da;
+}
+
+.row-link {
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.row-link:hover {
+  color: var(--purple);
+  text-decoration: underline;
+}
+
+.fieldset-note {
+  margin: 0 0 18px;
+  border-radius: 10px;
+  color: #8b641f;
+  background: #fff8e8;
+  padding: 11px 13px;
+  font-size: 12px;
+}
+
 .table-empty {
   display: grid;
   min-height: 340px;

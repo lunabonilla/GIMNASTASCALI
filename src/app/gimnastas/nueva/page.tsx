@@ -29,7 +29,7 @@ export default async function NewGymnastPage({
         <div className="form-heading">
           <span className="section-kicker">Nueva deportista</span>
           <h1>Registrar gimnasta</h1>
-          <p>Los campos marcados con * son obligatorios.</p>
+          <p>Puedes completar el responsable y el nivel más adelante.</p>
         </div>
 
         {error && <div className="error-banner">{error}</div>}
@@ -47,8 +47,8 @@ export default async function NewGymnastPage({
                 <input name="last_name" required autoComplete="family-name" />
               </label>
               <label>
-                Fecha de nacimiento *
-                <input name="birth_date" type="date" required />
+                Fecha de nacimiento
+                <input name="birth_date" type="date" />
               </label>
               <label>
                 Documento de identidad
@@ -73,12 +73,12 @@ export default async function NewGymnastPage({
             <legend>Responsable principal</legend>
             <div className="form-grid">
               <label>
-                Nombre completo *
-                <input name="guardian_name" required autoComplete="name" />
+                Nombre completo
+                <input name="guardian_name" autoComplete="name" />
               </label>
               <label>
-                Número de contacto *
-                <input name="guardian_phone" required type="tel" autoComplete="tel" />
+                Número de contacto
+                <input name="guardian_phone" type="tel" autoComplete="tel" />
               </label>
               <label>
                 Parentesco

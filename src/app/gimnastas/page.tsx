@@ -16,7 +16,7 @@ export default async function GymnastsPage({
   const { q = "", created } = await searchParams;
   let query = supabase
     .from("gymnasts")
-    .select("id, first_name, last_name, birth_date, identity_document, status, levels(name)")
+    .select("id, first_name, last_name, birth_date, identity_document, status, levels(name), gymnast_guardians(guardian_id)")
     .order("first_name");
 
   if (q.trim()) {
@@ -31,10 +31,11 @@ export default async function GymnastsPage({
     id: string;
     first_name: string;
     last_name: string;
-    birth_date: string;
+    birth_date: string | null;
     identity_document: string | null;
     status: "active" | "suspended" | "retired";
     levels: Array<{ name: string }> | null;
+    gymnast_guardians: Array<{ guardian_id: string }>;
   }>;
 
   return (
@@ -105,17 +106,27 @@ export default async function GymnastsPage({
                   {gymnasts.map((gymnast) => (
                     <tr key={gymnast.id}>
                       <td>
-                        <strong>{gymnast.first_name} {gymnast.last_name}</strong>
+                        <Link href={`/gimnastas/${gymnast.id}`} className="row-link">
+                          {gymnast.first_name} {gymnast.last_name}
+                        </Link>
                       </td>
                       <td>{gymnast.identity_document || "Sin registrar"}</td>
                       <td>
-                        {new Intl.DateTimeFormat("es-CO", {
-                          dateStyle: "medium",
-                          timeZone: "UTC",
-                        }).format(new Date(gymnast.birth_date))}
+                        {gymnast.birth_date
+                          ? new Intl.DateTimeFormat("es-CO", {
+                              dateStyle: "medium",
+                              timeZone: "UTC",
+                            }).format(new Date(gymnast.birth_date))
+                          : "Sin registrar"}
                       </td>
                       <td>{gymnast.levels?.[0]?.name || "Sin asignar"}</td>
-                      <td><span className="status-chip">Activa</span></td>
+                      <td>
+                        {gymnast.gymnast_guardians.length ? (
+                          <span className="status-chip">Completa</span>
+                        ) : (
+                          <span className="status-chip pending">Información pendiente</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
