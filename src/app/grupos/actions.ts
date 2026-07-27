@@ -86,7 +86,7 @@ export async function createGroup(formData: FormData) {
       weekday,
       starts_at: startsAt,
       ends_at: endsAt,
-      location: value(formData, "location") || null,
+      location: null,
     })));
   if (scheduleError) {
     await supabase.from("training_groups").delete().eq("id", group.id);
@@ -111,7 +111,6 @@ export async function updateGroup(formData: FormData) {
     weekday,
     startsAt: value(formData, `starts_at_${weekday}`),
     endsAt: value(formData, `ends_at_${weekday}`),
-    location: value(formData, `location_${weekday}`),
   }));
 
   const editUrl = `/grupos/${groupId}/editar`;
@@ -195,7 +194,7 @@ export async function updateGroup(formData: FormData) {
       weekday: slot.weekday,
       starts_at: slot.startsAt,
       ends_at: slot.endsAt,
-      location: slot.location || null,
+      location: null,
     })));
   if (scheduleError) redirect(`${editUrl}?error=No+pudimos+guardar+el+nuevo+horario`);
 
@@ -335,4 +334,41 @@ export async function endEnrollment(formData: FormData) {
   revalidatePath("/grupos");
   revalidatePath(`/grupos/${groupId}`);
   redirect(`/grupos/${groupId}?removed=1`);
+}
+
+export async function updateEnrollmentStatus(formData: FormData) {
+  const groupId = value(formData, "group_id");
+  const enrollmentId = value(formData, "enrollment_id");
+  const participationStatus = value(formData, "participation_status");
+  const statusNote = value(formData, "status_note");
+  const filter = value(formData, "return_filter") || "all";
+  const allowed = ["active", "vacation", "paused", "injured", "pending"];
+
+  if (!groupId || !enrollmentId || !allowed.includes(participationStatus)) {
+    redirect(`/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
+  }
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("staff_profiles")
+    .select("role, active")
+    .single();
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(`/grupos/${groupId}?error=No+tienes+permiso+para+cambiar+el+estado`);
+  }
+
+  const { error } = await supabase
+    .from("enrollments")
+    .update({
+      participation_status: participationStatus,
+      status_note: statusNote || null,
+    })
+    .eq("id", enrollmentId)
+    .eq("group_id", groupId)
+    .eq("active", true);
+
+  if (error) redirect(`/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
+  revalidatePath(`/grupos/${groupId}`);
+  revalidatePath(`/asistencia/${groupId}`);
+  redirect(`/grupos/${groupId}?status_updated=1&filter=${encodeURIComponent(filter)}`);
 }

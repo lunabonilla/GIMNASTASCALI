@@ -1,182 +1,518 @@
-.financeRow {
+.summary {
   display: grid;
-  grid-template-columns:
-    minmax(180px, 1fr)
-    minmax(290px, 1.55fr)
-    minmax(190px, 0.95fr)
-    minmax(130px, 0.7fr);
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary article {
+  display: flex;
+  min-height: 135px;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid #e7dfeb;
+  border-radius: 18px;
+  background: white;
+  padding: 21px;
+}
+
+.summary span,
+.summary small {
+  color: #847a89;
+}
+
+.summary strong {
+  margin: 7px 0 3px;
+  color: #2c2431;
+  font-size: clamp(25px, 3vw, 38px);
+}
+
+.primarySummary {
+  border: 0 !important;
+  background: linear-gradient(135deg, #5d238e, #8241b3) !important;
+}
+
+.primarySummary span,
+.primarySummary small,
+.primarySummary strong {
+  color: white !important;
+}
+
+.lateSummary {
+  border-color: #efd5d1 !important;
+  background: #fff9f8 !important;
+}
+
+.lateSummary strong {
+  color: #a9443d;
+}
+
+.paidSummary strong {
+  color: #2d7657;
+}
+
+.archiveNotice {
+  display: flex;
   align-items: center;
-  gap: 16px;
-  border-top: 1px solid #eee8f1;
-  color: #403647;
-  padding: 17px 22px;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 18px;
+  border: 1px solid #e1d7e7;
+  border-radius: 13px;
+  background: #faf7fc;
+  padding: 13px 16px;
+}
+
+.archiveNotice div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.archiveNotice strong {
+  font-size: 11px;
+}
+
+.archiveNotice span {
+  color: #8b818f;
+  font-size: 9px;
+}
+
+.archiveNotice a {
+  color: #682994;
+  font-size: 10px;
+  font-weight: 850;
   text-decoration: none;
 }
 
-.accountName {
+.workspace {
+  overflow: hidden;
+  border: 1px solid #e3dce7;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 12px 38px rgba(56, 37, 65, .05);
+}
+
+.toolbar {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.accountName > strong {
-  font-size: 13px;
-}
-
-a.financeRow:hover {
-  background: #faf7fc;
-}
-
-.debtList {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.debtTag {
-  display: flex;
-  width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  border-radius: 9px;
-  color: #6f4c85;
-  background: #f0e5f6;
-  font-size: 10px;
-  padding: 7px 9px;
+  gap: 18px;
+  border-bottom: 1px solid #e8e2eb;
+  padding: 0 20px;
 }
 
-.debtTag > span {
+.views {
+  display: flex;
+  overflow-x: auto;
+  align-items: center;
+  gap: 3px;
+}
+
+.views a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 3px solid transparent;
+  color: #7e7582;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 17px 8px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.views a span {
+  border-radius: 999px;
+  background: #f0ecf2;
+  color: #766c7b;
+  font-size: 8px;
+  padding: 3px 6px;
+}
+
+.views .activeView {
+  border-color: #682995;
+  color: #62238f;
+}
+
+.views .activeView span {
+  background: #eee1f7;
+  color: #62238f;
+}
+
+.search {
+  display: flex;
+  gap: 7px;
+}
+
+.search input {
+  width: 175px;
+  border: 1px solid #dfd8e3;
+  border-radius: 8px;
+  background: #faf9fb;
+  padding: 8px 10px;
+}
+
+.search button {
+  border: 0;
+  border-radius: 8px;
+  background: #eee5f4;
+  color: #62288e;
+  font-weight: 850;
+  padding: 8px 10px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 23px 23px 16px;
+}
+
+.titleRow h2 {
+  margin: 3px 0 0;
+  font-size: 23px;
+}
+
+.titleRow > a {
+  border-radius: 9px;
+  background: #652793;
+  color: white;
+  font-size: 10px;
+  font-weight: 850;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+.columns,
+.account summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(145px, .75fr) minmax(210px, 1fr) minmax(125px, .65fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.columns {
+  border-block: 1px solid #ede8ef;
+  background: #faf9fb;
+  color: #918895;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  padding: 10px 23px;
+  text-transform: uppercase;
+}
+
+.account {
+  border-bottom: 1px solid #ede8ef;
+}
+
+.account:last-child {
+  border-bottom: 0;
+}
+
+.account summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 23px;
+}
+
+.account summary::-webkit-details-marker {
+  display: none;
+}
+
+.account summary:hover,
+.account[open] summary {
+  background: #fbf8fd;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
 }
 
-.debtTag strong,
-.debtTag small {
-  display: block;
+.person > i {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: #eee3f5;
+  color: #672993;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.person > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.person strong {
   overflow: hidden;
+  max-width: 190px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.debtTag small {
-  max-width: 150px;
-  margin-top: 2px;
-  opacity: 0.72;
+.person small {
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 850;
+  padding: 3px 7px;
 }
 
-.debtTag b {
-  flex: 0 0 auto;
-  font-size: 9px;
+.late { background: #f9dfdd; color: #a43e37; }
+.pending { background: #ffefc5; color: #876018; }
+.paid { background: #dcf0e5; color: #307357; }
+
+.due,
+.balance {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.monthly_fee {
-  color: #6d4a86;
-  background: #eee2f5;
-}
-
-.product {
-  color: #8a6221;
-  background: #fff0c8;
-}
-
-.private_class,
-.extra_class {
-  color: #336b56;
-  background: #e0f0e7;
-}
-
-.competition {
-  color: #356a94;
-  background: #e0eef9;
-}
-
-.moreDebts {
-  color: var(--purple);
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.cycle {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: baseline;
-  gap: 5px 8px;
-}
-
-.cycle small {
-  color: #958d99;
+.due small,
+.balance small {
+  color: #938a97;
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.cycle strong {
+.due strong {
   font-size: 10px;
 }
 
-.balance {
+.preview {
   display: flex;
-  align-items: flex-end;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 5px;
+}
+
+.preview small {
+  border-radius: 6px;
+  background: #eee3f4;
+  color: #6c4683;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 5px 7px;
+}
+
+.preview .product { background: #fff0c5; color: #7f5b12; }
+.preview .private_class,
+.preview .extra_class { background: #ddefe5; color: #326c54; }
+.preview .competition { background: #dcecf8; color: #326386; }
+
+.balance {
+  align-items: flex-end;
   text-align: right;
 }
 
-.balance > strong {
-  font-size: 15px;
+.balance strong {
+  font-size: 14px;
 }
 
-.balance > small {
-  color: var(--purple);
-  font-size: 9px;
+.balance small {
+  color: #672793;
+}
+
+.detail {
+  border-top: 1px solid #e9e2ed;
+  background: #fcfbfd;
+  padding: 18px 23px 21px 68px;
+}
+
+.cycleInfo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-bottom: 15px;
+}
+
+.cycleInfo > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #e7e0ea;
+  border-radius: 10px;
+  background: white;
+  padding: 10px;
+}
+
+.cycleInfo small {
+  color: #918795;
+  font-size: 8px;
   font-weight: 800;
+  text-transform: uppercase;
 }
 
-@media (max-width: 1050px) {
-  .financeRow {
-    min-width: 0;
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-    margin: 10px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
+.cycleInfo strong {
+  font-size: 10px;
+}
+
+.breakdown {
+  overflow: hidden;
+  border: 1px solid #e6dfe9;
+  border-radius: 11px;
+  background: white;
+}
+
+.breakdownHead,
+.debtLine {
+  display: grid;
+  grid-template-columns: 11px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 13px;
+}
+
+.breakdownHead {
+  grid-template-columns: 1fr auto;
+  background: #f7f4f8;
+  color: #897f8d;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.debtLine {
+  border-top: 1px solid #eee9f0;
+}
+
+.debtLine > i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: #b78bcd;
+}
+
+.debtLine > i.product { background: #e4b84f; }
+.debtLine > i.private_class,
+.debtLine > i.extra_class { background: #70b291; }
+.debtLine > i.competition { background: #6ca8d1; }
+
+.debtLine > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.debtLine strong,
+.debtLine b {
+  font-size: 10px;
+}
+
+.debtLine small {
+  color: #928996;
+  font-size: 8px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.actions a {
+  border: 1px solid #dacfe0;
+  border-radius: 8px;
+  color: #64288f;
+  font-size: 9px;
+  font-weight: 850;
+  padding: 9px 11px;
+  text-decoration: none;
+}
+
+.actions .payButton {
+  border-color: #642791;
+  background: #642791;
+  color: white;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    padding: 13px 15px 0;
   }
 
-  .financeRow:first-child {
+  .search input {
+    width: 100%;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .columns {
     display: none;
   }
 
-  .debtList {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .account summary {
+    grid-template-columns: 1fr auto;
+    padding: 14px 16px;
   }
 
-  .cycle {
+  .preview,
+  .due {
     grid-column: 1;
   }
 
   .balance {
     grid-column: 2;
+    grid-row: 1;
+  }
+
+  .detail {
+    padding: 15px;
   }
 }
 
-@media (max-width: 560px) {
-  .financeRow {
-    grid-template-columns: 1fr;
+@media (max-width: 620px) {
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .primarySummary {
+    grid-column: 1 / -1;
+  }
+
+  .summary article {
+    min-height: 105px;
     padding: 16px;
   }
 
-  .debtList,
-  .cycle,
-  .balance {
-    grid-column: 1;
+  .summary strong {
+    font-size: 21px;
   }
 
-  .balance {
+  .archiveNotice {
     align-items: flex-start;
-    text-align: left;
+    flex-direction: column;
+  }
+
+  .titleRow {
+    padding: 19px 15px 13px;
+  }
+
+  .cycleInfo {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions a {
+    text-align: center;
   }
 }

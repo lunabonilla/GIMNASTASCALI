@@ -67,7 +67,7 @@ export default async function EditGroupPage({
             </p>
             <div className="schedule-editor">
               <div className="schedule-editor-head">
-                <span>Día</span><span>Inicio</span><span>Final</span><span>Sede o espacio</span>
+                <span>Día</span><span>Inicio</span><span>Final</span>
               </div>
               {days.map(([day, label]) => {
                 const slot = slotsByDay.get(day);
@@ -79,7 +79,6 @@ export default async function EditGroupPage({
                     </label>
                     <label><span>Hora de inicio</span><input name={`starts_at_${day}`} type="time" defaultValue={slot?.starts_at?.slice(0, 5) ?? ""} /></label>
                     <label><span>Hora final</span><input name={`ends_at_${day}`} type="time" defaultValue={slot?.ends_at?.slice(0, 5) ?? ""} /></label>
-                    <label><span>Sede o espacio</span><input name={`location_${day}`} defaultValue={slot?.location ?? ""} placeholder="Sede principal" /></label>
                   </div>
                 );
               })}

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { deleteGroup, endEnrollment, enrollGymnast } from "../actions";
+import {
+  deleteGroup,
+  endEnrollment,
+  enrollGymnast,
+  updateEnrollmentStatus,
+} from "../actions";
 
 const dayNames: Record<number, string> = {
   1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves",
@@ -15,6 +20,8 @@ type PageProps = {
     assigned?: string;
     removed?: string;
     updated?: string;
+    status_updated?: string;
+    filter?: string;
   }>;
 };
 
@@ -37,7 +44,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
       .single(),
     supabase
       .from("enrollments")
-      .select("id, gymnast_id, starts_on, gymnasts(first_name, last_name)")
+      .select("id, gymnast_id, starts_on, participation_status, status_note, gymnasts(first_name, last_name)")
       .eq("group_id", id)
       .eq("active", true)
       .order("created_at"),
@@ -69,12 +76,27 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     id: string;
     gymnast_id: string;
     starts_on: string;
+    participation_status: "active" | "vacation" | "paused" | "injured" | "pending";
+    status_note: string | null;
     gymnasts:
       | { first_name: string; last_name: string }
       | Array<{ first_name: string; last_name: string }>
       | null;
   }>;
   const enrolledIds = new Set(enrollments.map((item) => item.gymnast_id));
+  const selectedFilter = ["all", "active", "vacation", "paused", "injured", "pending"].includes(messages.filter ?? "")
+    ? messages.filter!
+    : "all";
+  const visibleEnrollments = selectedFilter === "all"
+    ? enrollments
+    : enrollments.filter((item) => item.participation_status === selectedFilter);
+  const statusLabels: Record<string, string> = {
+    active: "Entrenando",
+    vacation: "Vacaciones",
+    paused: "Pausa temporal",
+    injured: "Lesión",
+    pending: "Pendiente",
+  };
   const availableGymnasts = ((gymnastData ?? []) as Array<{
     id: string;
     first_name: string;
@@ -107,25 +129,45 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
         {messages.assigned && <div className="success-banner">✓ Gimnasta asignada al grupo.</div>}
         {messages.removed && <div className="success-banner">✓ Gimnasta retirada; conservamos su historial.</div>}
         {messages.updated && <div className="success-banner">✓ Grupo y horario actualizados.</div>}
+        {messages.status_updated && <div className="success-banner">✓ Estado temporal actualizado.</div>}
 
         <div className="group-detail-grid">
           <section className="data-panel">
             <div className="data-panel-heading">
               <span className="section-kicker">Deportistas</span>
               <h2>Integrantes del grupo</h2>
+              <nav className="member-filters" aria-label="Filtrar integrantes">
+                {[
+                  ["all", "Todas"],
+                  ["active", "Entrenando"],
+                  ["vacation", "Vacaciones"],
+                  ["paused", "Pausadas"],
+                  ["injured", "Lesión"],
+                  ["pending", "Pendientes"],
+                ].map(([key, label]) => (
+                  <Link
+                    href={`/grupos/${id}?filter=${key}`}
+                    className={selectedFilter === key ? "active" : ""}
+                    key={key}
+                  >
+                    {label}
+                    <span>{key === "all" ? enrollments.length : enrollments.filter((item) => item.participation_status === key).length}</span>
+                  </Link>
+                ))}
+              </nav>
             </div>
-            {enrollments.length === 0 ? (
+            {visibleEnrollments.length === 0 ? (
               <div className="compact-empty">
-                <p>Aún no hay gimnastas asignadas.</p>
+                <p>No hay gimnastas en este filtro.</p>
               </div>
             ) : (
               <div className="member-list">
-                {enrollments.map((enrollment) => {
+                {visibleEnrollments.map((enrollment) => {
                   const gymnast = Array.isArray(enrollment.gymnasts)
                     ? enrollment.gymnasts[0]
                     : enrollment.gymnasts;
                   return (
-                    <div className="member-row" key={enrollment.id}>
+                    <div className={`member-row member-${enrollment.participation_status}`} key={enrollment.id}>
                       <div className="member-avatar">
                         {gymnast?.first_name?.[0] ?? "G"}
                       </div>
@@ -134,7 +176,25 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
                         <span>Desde {new Intl.DateTimeFormat("es-CO", {
                           dateStyle: "medium", timeZone: "UTC",
                         }).format(new Date(enrollment.starts_on))}</span>
+                        <small className={`member-status member-status-${enrollment.participation_status}`}>
+                          {statusLabels[enrollment.participation_status]}
+                          {enrollment.status_note ? ` · ${enrollment.status_note}` : ""}
+                        </small>
                       </div>
+                      <form action={updateEnrollmentStatus} className="member-status-form">
+                        <input type="hidden" name="group_id" value={detail.id} />
+                        <input type="hidden" name="enrollment_id" value={enrollment.id} />
+                        <input type="hidden" name="return_filter" value={selectedFilter} />
+                        <select name="participation_status" defaultValue={enrollment.participation_status}>
+                          <option value="active">Entrenando</option>
+                          <option value="vacation">Vacaciones</option>
+                          <option value="paused">Pausa temporal</option>
+                          <option value="injured">Lesión</option>
+                          <option value="pending">Pendiente</option>
+                        </select>
+                        <input name="status_note" defaultValue={enrollment.status_note ?? ""} placeholder="Nota opcional" />
+                        <button type="submit">Guardar</button>
+                      </form>
                       <form action={endEnrollment}>
                         <input type="hidden" name="group_id" value={detail.id} />
                         <input type="hidden" name="enrollment_id" value={enrollment.id} />

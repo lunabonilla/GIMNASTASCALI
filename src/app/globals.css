@@ -1813,7 +1813,7 @@ th {
 .schedule-editor-head,
 .schedule-editor-row {
   display: grid;
-  grid-template-columns: minmax(130px, .8fr) minmax(125px, .65fr) minmax(125px, .65fr) minmax(180px, 1fr);
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
   align-items: center;
   gap: 12px;
   padding: 11px 14px;
@@ -1860,6 +1860,97 @@ th {
   width: auto;
 }
 
+.member-filters {
+  display: flex;
+  overflow-x: auto;
+  gap: 5px;
+  margin-top: 13px;
+}
+
+.member-filters a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 8px;
+  color: #7e7483;
+  background: #f4f1f6;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 6px 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.member-filters a span {
+  border-radius: 999px;
+  background: white;
+  padding: 2px 5px;
+}
+
+.member-filters a.active {
+  color: white;
+  background: #6b2c99;
+}
+
+.member-row.member-vacation {
+  border-left: 4px solid #f1b94f;
+  background: #fffaf0;
+}
+
+.member-row.member-paused {
+  border-left: 4px solid #eb7c79;
+  background: #fff5f4;
+}
+
+.member-row.member-injured {
+  border-left: 4px solid #e08ea8;
+  background: #fff6f9;
+}
+
+.member-row.member-pending {
+  border-left: 4px solid #72aadd;
+  background: #f4f9fd;
+}
+
+.member-status {
+  display: inline-block !important;
+  width: fit-content;
+  margin-top: 5px;
+  border-radius: 999px;
+  font-size: 8px !important;
+  font-weight: 850;
+  padding: 3px 7px;
+}
+
+.member-status-active { color: #34745a !important; background: #dff1e8; }
+.member-status-vacation { color: #865f17 !important; background: #ffedbd; }
+.member-status-paused { color: #a13f3c !important; background: #f9dfdd; }
+.member-status-injured { color: #95455e !important; background: #f7dce5; }
+.member-status-pending { color: #376886 !important; background: #deedf7; }
+
+.member-status-form {
+  display: grid;
+  grid-template-columns: 130px 150px auto;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.member-status-form select,
+.member-status-form input,
+.member-status-form button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  font-size: 9px;
+  padding: 6px 8px;
+}
+
+.member-status-form button {
+  color: var(--purple);
+  font-weight: 850;
+}
+
 @media (max-width: 720px) {
   .schedule-editor {
     overflow: visible;
@@ -1894,7 +1985,13 @@ th {
   }
 
   .schedule-editor-row label:last-child {
-    grid-column: 1 / -1;
+    grid-column: auto;
+  }
+
+  .member-status-form {
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin: 10px 0 0;
   }
 }
 

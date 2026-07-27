@@ -57,7 +57,6 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
                   ))}
                 </div>
               </div>
-              <label>Sede o espacio<input name="location" placeholder="Sede principal" /></label>
               <label>Hora de inicio *<input name="starts_at" type="time" required /></label>
               <label>Hora de finalización *<input name="ends_at" type="time" required /></label>
             </div>

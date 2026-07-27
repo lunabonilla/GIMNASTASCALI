@@ -34,7 +34,8 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
       .from("enrollments")
       .select("gymnast_id, gymnasts(first_name, last_name)")
       .eq("group_id", groupId)
-      .eq("active", true),
+      .eq("active", true)
+      .eq("participation_status", "active"),
     supabase
       .from("gymnasts")
       .select("id, first_name, last_name")
