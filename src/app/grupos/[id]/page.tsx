@@ -67,7 +67,10 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     id: string;
     gymnast_id: string;
     starts_on: string;
-    gymnasts: Array<{ first_name: string; last_name: string }> | null;
+    gymnasts:
+      | { first_name: string; last_name: string }
+      | Array<{ first_name: string; last_name: string }>
+      | null;
   }>;
   const enrolledIds = new Set(enrollments.map((item) => item.gymnast_id));
   const availableGymnasts = ((gymnastData ?? []) as Array<{
@@ -110,7 +113,9 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
             ) : (
               <div className="member-list">
                 {enrollments.map((enrollment) => {
-                  const gymnast = enrollment.gymnasts?.[0];
+                  const gymnast = Array.isArray(enrollment.gymnasts)
+                    ? enrollment.gymnasts[0]
+                    : enrollment.gymnasts;
                   return (
                     <div className="member-row" key={enrollment.id}>
                       <div className="member-avatar">

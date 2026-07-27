@@ -40,7 +40,10 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
   const slot = detail.group_schedule_slots[0];
   const enrollments = (enrollmentData ?? []) as Array<{
     gymnast_id: string;
-    gymnasts: Array<{ first_name: string; last_name: string }> | null;
+    gymnasts:
+      | { first_name: string; last_name: string }
+      | Array<{ first_name: string; last_name: string }>
+      | null;
   }>;
 
   let currentRecords = new Map<string, string>();
@@ -99,7 +102,9 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
             <input type="hidden" name="ends_at" value={slot.ends_at.slice(0, 8)} />
             <div className="attendance-list">
               {enrollments.map((enrollment, index) => {
-                const gymnast = enrollment.gymnasts?.[0];
+                const gymnast = Array.isArray(enrollment.gymnasts)
+                  ? enrollment.gymnasts[0]
+                  : enrollment.gymnasts;
                 return (
                   <div className="attendance-row" key={enrollment.gymnast_id}>
                     <span>{index + 1}</span>
