@@ -13,7 +13,7 @@ const navigation = [
   { label: "Inicio", icon: "⌂", active: true, href: "/" },
   { label: "Clases de prueba", icon: "◇" },
   { label: "Gimnastas", icon: "○", href: "/gimnastas" },
-  { label: "Grupos y horarios", icon: "▦" },
+  { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓" },
   { label: "Cartera y pagos", icon: "$" },
   { label: "Inventario", icon: "□" },
@@ -26,18 +26,21 @@ const modules = [
     description: "Registra una nueva familia y programa su primera visita.",
     action: "Nueva prueba",
     icon: "◇",
+    href: "#",
   },
   {
     title: "Crear grupo",
     description: "Organiza niveles, horarios, cupos y profesora asignada.",
     action: "Crear grupo",
     icon: "▦",
+    href: "/grupos/nuevo",
   },
   {
     title: "Registrar pago",
     description: "Aplica mensualidades, abonos o compras de artículos.",
     action: "Nuevo pago",
     icon: "$",
+    href: "#",
   },
 ];
 
@@ -217,7 +220,9 @@ export default async function Home() {
                 Empieza configurando los grupos y horarios de Gimnastas Cali.
                 Desde aquí podrás acompañar cada clase, pago y proceso.
               </p>
-              <button className="welcome-action">Configurar mi club →</button>
+              <Link href="/grupos/nuevo" className="welcome-action">
+                Configurar mi club →
+              </Link>
             </div>
             <div className="welcome-mark" aria-hidden="true">
               <Image
@@ -262,7 +267,9 @@ export default async function Home() {
                   Cuando configures tus grupos, el horario de cada día aparecerá
                   aquí.
                 </p>
-                <button className="secondary-button">Crear primer grupo</button>
+                <Link href="/grupos/nuevo" className="secondary-button">
+                  Crear primer grupo
+                </Link>
               </div>
             </section>
 
@@ -316,7 +323,7 @@ export default async function Home() {
                     <h3>{module.title}</h3>
                     <p>{module.description}</p>
                   </div>
-                  <button>{module.action} →</button>
+                  <Link href={module.href}>{module.action} →</Link>
                 </article>
               ))}
             </div>

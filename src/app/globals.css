@@ -415,6 +415,135 @@ th {
   }
 }
 
+.welcome-action,
+.secondary-button {
+  display: inline-flex;
+  width: fit-content;
+  text-decoration: none;
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.group-card {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--white);
+  padding: 25px;
+  box-shadow: 0 12px 32px rgba(45, 26, 58, 0.06);
+}
+
+.group-card-top,
+.capacity-block > div:first-child,
+.group-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.group-card h2 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.group-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.group-meta > div {
+  border-radius: 12px;
+  background: #f8f5fa;
+  padding: 12px;
+}
+
+.group-meta span,
+.group-meta strong {
+  display: block;
+}
+
+.group-meta span,
+.capacity-block span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.group-meta strong {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.schedule-list {
+  display: grid;
+  gap: 8px;
+}
+
+.schedule-list > div {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 11px 13px;
+  font-size: 12px;
+}
+
+.schedule-list small {
+  color: var(--muted);
+}
+
+.capacity-block {
+  margin: 22px 0;
+}
+
+.capacity-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eee9f1;
+  margin-top: 9px;
+}
+
+.capacity-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--purple);
+}
+
+.group-card footer {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.group-card footer > span {
+  font-weight: 800;
+}
+
+.group-card footer small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.group-card footer button {
+  border: 0;
+  color: #a49da7;
+  background: transparent;
+}
+
+@media (max-width: 900px) {
+  .group-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 button,
 a {
   font: inherit;
