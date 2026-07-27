@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { addMakeupGymnast, saveAttendance } from "../actions";
+import { addMakeupGymnast } from "../actions";
+import { AttendanceForm } from "./attendance-form";
 
 type PageProps = {
   params: Promise<{ groupId: string }>;
@@ -155,56 +156,33 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
             </select>
             <button type="submit">＋ Agregar</button>
           </form>
-          <form action={saveAttendance}>
-            <input type="hidden" name="group_id" value={groupId} />
-            <input type="hidden" name="date" value={date} />
-            <input type="hidden" name="starts_at" value={slot.starts_at.slice(0, 8)} />
-            <input type="hidden" name="ends_at" value={slot.ends_at.slice(0, 8)} />
-            <div className="attendance-list">
-              {enrollments.map((enrollment, index) => {
+          <AttendanceForm
+            groupId={groupId}
+            date={date}
+            startsAt={slot.starts_at.slice(0, 8)}
+            endsAt={slot.ends_at.slice(0, 8)}
+            gymnasts={[
+              ...enrollments.map((enrollment) => {
                 const gymnast = Array.isArray(enrollment.gymnasts)
                   ? enrollment.gymnasts[0]
                   : enrollment.gymnasts;
-                return (
-                  <div className="attendance-row" key={enrollment.gymnast_id}>
-                    <span>{index + 1}</span>
-                    <strong>{gymnast?.first_name} {gymnast?.last_name}</strong>
-                    <select
-                      name={`attendance_${enrollment.gymnast_id}`}
-                      defaultValue={currentRecords.get(enrollment.gymnast_id) ?? "present"}
-                    >
-                      <option value="present">Presente</option>
-                      <option value="absent">Ausente</option>
-                      <option value="excused">Con excusa</option>
-                      <option value="makeup">Recuperación</option>
-                    </select>
-                  </div>
-                );
-              })}
-              {extraAttendees.map((gymnast, index) => (
-                <div className="attendance-row makeup-row" key={gymnast.gymnast_id}>
-                  <span>{enrollments.length + index + 1}</span>
-                  <strong>
-                    {gymnast.first_name} {gymnast.last_name}
-                    <small>Recuperación</small>
-                  </strong>
-                  <select
-                    name={`attendance_${gymnast.gymnast_id}`}
-                    defaultValue={currentRecords.get(gymnast.gymnast_id) ?? "makeup"}
-                  >
-                    <option value="makeup">Recuperación</option>
-                    <option value="present">Presente</option>
-                    <option value="absent">Ausente</option>
-                    <option value="excused">Con excusa</option>
-                  </select>
-                </div>
-              ))}
-            </div>
-            <div className="attendance-footer">
-              <span>{enrollments.length + extraAttendees.length} gimnastas en la lista</span>
-              <button type="submit" className="primary-button">Guardar asistencia</button>
-            </div>
-          </form>
+                return {
+                  id: enrollment.gymnast_id,
+                  name: `${gymnast?.first_name ?? ""} ${gymnast?.last_name ?? ""}`.trim(),
+                  initialStatus: (currentRecords.get(enrollment.gymnast_id) ?? "present") as
+                    "present" | "absent" | "excused" | "makeup",
+                  isMakeup: false,
+                };
+              }),
+              ...extraAttendees.map((gymnast) => ({
+                id: gymnast.gymnast_id,
+                name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+                initialStatus: (currentRecords.get(gymnast.gymnast_id) ?? "makeup") as
+                  "present" | "absent" | "excused" | "makeup",
+                isMakeup: true,
+              })),
+            ]}
+          />
           </>
         )}
       </div>

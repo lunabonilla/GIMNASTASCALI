@@ -1,0 +1,265 @@
+.form {
+  margin-top: 18px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 16px;
+  background: #f7f2fa;
+  padding: 14px 16px;
+}
+
+.toolbar strong,
+.toolbar span {
+  display: block;
+}
+
+.toolbar strong {
+  font-size: 13px;
+}
+
+.toolbar span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.toolbar button {
+  min-height: 42px;
+  border: 1px solid #cce8d9;
+  border-radius: 12px;
+  color: #287258;
+  background: #e8f6ee;
+  font-size: 11px;
+  font-weight: 850;
+  padding: 0 14px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(390px, 1.5fr);
+  align-items: center;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.makeupRow {
+  border-color: #cddff2;
+  background: #f8fbff;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.identity > span {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  color: #83798a;
+  background: #f2edf5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.identity strong,
+.identity small {
+  display: block;
+}
+
+.identity strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity small {
+  margin-top: 3px;
+  color: #477ba6;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.option {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #e7e1ea;
+  border-radius: 12px;
+  color: #817984;
+  background: #fff;
+  padding: 6px;
+}
+
+.option > span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f2eef4;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.option small {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.option.selected.present {
+  border-color: #9ed9bb;
+  color: #1f704f;
+  background: #e4f6ec;
+}
+
+.option.selected.present > span {
+  color: #fff;
+  background: #32a06f;
+}
+
+.option.selected.absent {
+  border-color: #e9b2b2;
+  color: #9b3e3e;
+  background: #fce9e9;
+}
+
+.option.selected.absent > span {
+  color: #fff;
+  background: #d95d5d;
+}
+
+.option.selected.excused {
+  border-color: #edd59b;
+  color: #876516;
+  background: #fff5d8;
+}
+
+.option.selected.excused > span {
+  color: #fff;
+  background: #daa92f;
+}
+
+.option.selected.makeup {
+  border-color: #accbea;
+  color: #336e9d;
+  background: #e8f2fc;
+}
+
+.option.selected.makeup > span {
+  color: #fff;
+  background: #4d8fc4;
+}
+
+.footer {
+  position: sticky;
+  bottom: 12px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid #dfd2e8;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 12px 14px;
+  box-shadow: 0 12px 32px rgba(55, 28, 74, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.footer > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.footer > button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: var(--purple);
+  font-size: 12px;
+  font-weight: 850;
+  padding: 0 22px;
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar button {
+    flex: 0 0 auto;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 13px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .option {
+    min-height: 58px;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .option small {
+    font-size: 8px;
+  }
+
+  .footer {
+    bottom: 8px;
+  }
+}
+
+@media (max-width: 430px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .toolbar button {
+    width: 100%;
+  }
+
+  .footer > span {
+    display: none;
+  }
+
+  .footer > button {
+    width: 100%;
+  }
+}

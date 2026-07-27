@@ -1,0 +1,21 @@
+.cycleDate {
+  display: inline-flex;
+  border-radius: 8px;
+  color: #68457f;
+  background: #efe4f6;
+  font-size: 11px;
+  font-weight: 750;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.endDate {
+  color: #8b6219;
+  background: #fff1c8;
+}
+
+.missing {
+  color: #7d747f;
+  background: #efecf0;
+  font-weight: 650;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import styles from "./page.module.css";
 
 type SearchParams = Promise<{
   q?: string;
@@ -46,13 +47,20 @@ export default async function GymnastsPage({
     query = query.eq("level_id", level);
   }
 
-  const [{ data, error }, { data: levelData }] = await Promise.all([
+  const [{ data, error }, { data: levelData }, { data: cycleData }] = await Promise.all([
     query,
     supabase
       .from("levels")
       .select("id, name")
       .eq("active", true)
       .order("sort_order"),
+    supabase
+      .from("billing_charges")
+      .select("gymnast_id, period_starts_on, period_ends_on, due_on")
+      .eq("category", "monthly_fee")
+      .is("voided_at", null)
+      .not("period_starts_on", "is", null)
+      .order("period_starts_on", { ascending: false }),
   ]);
   const levels = (levelData ?? []) as Array<{ id: string; name: string }>;
   const gymnasts = (data ?? []) as Array<{
@@ -83,6 +91,26 @@ export default async function GymnastsPage({
     `${prefix}-${String(value ?? "none")
       .normalize("NFD").replace(/\p{Diacritic}/gu, "")
       .toLowerCase().replace(/\s+/g, "-")}`;
+  const cycleByGymnast = new Map<string, {
+    startsOn: string;
+    endsOn: string | null;
+  }>();
+  for (const cycle of cycleData ?? []) {
+    if (!cycle.period_starts_on || cycleByGymnast.has(cycle.gymnast_id)) continue;
+    cycleByGymnast.set(cycle.gymnast_id, {
+      startsOn: cycle.period_starts_on,
+      endsOn: cycle.period_ends_on ?? cycle.due_on,
+    });
+  }
+  const shortDate = (value: string | null | undefined) =>
+    value
+      ? new Intl.DateTimeFormat("es-CO", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${value}T00:00:00Z`))
+      : "Sin registrar";
 
   return (
     <main className="module-page">
@@ -171,6 +199,8 @@ export default async function GymnastsPage({
                     <th>Programa</th>
                     <th>Nivel</th>
                     <th>Grupo y días</th>
+                    <th>Inicio ciclo</th>
+                    <th>Vence ciclo</th>
                     <th>Estado deportivo</th>
                     <th>Información</th>
                   </tr>
@@ -190,6 +220,7 @@ export default async function GymnastsPage({
                     const gymnastLevel = Array.isArray(gymnast.levels)
                       ? gymnast.levels[0]
                       : gymnast.levels;
+                    const cycle = cycleByGymnast.get(gymnast.id);
                     return (
                     <tr key={gymnast.id}>
                       <td>
@@ -203,6 +234,16 @@ export default async function GymnastsPage({
                       <td>
                         <strong className="table-group-name">{group?.name || "Sin grupo"}</strong>
                         <small className="table-secondary">{days || "Días pendientes"}</small>
+                      </td>
+                      <td>
+                        <span className={`${styles.cycleDate} ${cycle ? "" : styles.missing}`}>
+                          {shortDate(cycle?.startsOn)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`${styles.cycleDate} ${styles.endDate} ${cycle ? "" : styles.missing}`}>
+                          {shortDate(cycle?.endsOn)}
+                        </span>
                       </td>
                       <td>
                         <span className={`sport-status ${gymnast.status}`}>

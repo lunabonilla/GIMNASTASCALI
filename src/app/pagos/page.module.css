@@ -1,0 +1,97 @@
+.financeRow {
+  display: grid;
+  grid-template-columns:
+    minmax(145px, 1.15fr)
+    minmax(90px, 0.65fr)
+    minmax(270px, 1.75fr)
+    minmax(100px, 0.72fr)
+    minmax(105px, 0.78fr)
+    minmax(115px, 0.8fr);
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid #eee8f1;
+  color: #403647;
+  padding: 17px 22px;
+  text-decoration: none;
+}
+
+a.financeRow:hover {
+  background: #faf7fc;
+}
+
+.debtList {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.debtTag {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 9px;
+  color: #6f4c85;
+  background: #f0e5f6;
+  font-size: 10px;
+  padding: 7px 9px;
+}
+
+.debtTag > span {
+  min-width: 0;
+}
+
+.debtTag strong,
+.debtTag small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debtTag small {
+  max-width: 150px;
+  margin-top: 2px;
+  opacity: 0.72;
+}
+
+.debtTag b {
+  flex: 0 0 auto;
+  font-size: 9px;
+}
+
+.monthly_fee {
+  color: #6d4a86;
+  background: #eee2f5;
+}
+
+.product {
+  color: #8a6221;
+  background: #fff0c8;
+}
+
+.private_class,
+.extra_class {
+  color: #336b56;
+  background: #e0f0e7;
+}
+
+.competition {
+  color: #356a94;
+  background: #e0eef9;
+}
+
+.moreDebts {
+  color: var(--purple);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+@media (max-width: 1050px) {
+  .financeRow {
+    min-width: 1050px;
+  }
+}

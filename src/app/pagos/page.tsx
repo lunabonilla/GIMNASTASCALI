@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import styles from "./page.module.css";
 
 const money = (cents: number) =>
   new Intl.NumberFormat("es-CO", {
@@ -26,7 +27,7 @@ export default async function PaymentsPage({
   ] = await Promise.all([
     supabase
       .from("billing_charges")
-      .select("id, gymnast_id, amount_cents, due_on, period_starts_on, voided_at, gymnasts(first_name, last_name, status), payment_allocations(amount_cents)")
+      .select("id, gymnast_id, concept, category, description, amount_cents, due_on, period_starts_on, period_ends_on, voided_at, gymnasts(first_name, last_name, status), payment_allocations(amount_cents)")
       .is("voided_at", null)
       .order("due_on"),
     supabase
@@ -40,6 +41,9 @@ export default async function PaymentsPage({
   const charges = (data ?? []) as Array<{
     id: string;
     gymnast_id: string;
+    concept: string;
+    category: string;
+    description: string | null;
     amount_cents: number;
     due_on: string;
     gymnasts:
@@ -51,6 +55,7 @@ export default async function PaymentsPage({
         }>
       | null;
     period_starts_on: string | null;
+    period_ends_on: string | null;
     payment_allocations: Array<{ amount_cents: number }>;
   }>;
 
@@ -63,6 +68,12 @@ export default async function PaymentsPage({
     status: string;
     nextDue: string | null;
     cycleStart: string | null;
+    debts: Array<{
+      concept: string;
+      category: string;
+      description: string | null;
+      balance: number;
+    }>;
   }>();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -84,13 +95,21 @@ export default async function PaymentsPage({
       status: gymnast?.status ?? "active",
       nextDue: null,
       cycleStart: null,
+      debts: [],
     };
     current.charged += Number(charge.amount_cents);
     current.paid += paid;
     if (charge.due_on < today) {
       current.overdue += Math.max(0, Number(charge.amount_cents) - paid);
     }
-    if (Number(charge.amount_cents) - paid > 0) {
+    const chargeBalance = Number(charge.amount_cents) - paid;
+    if (chargeBalance > 0) {
+      current.debts.push({
+        concept: charge.concept,
+        category: charge.category,
+        description: charge.description,
+        balance: chargeBalance,
+      });
       if (!current.nextDue || charge.due_on < current.nextDue) {
         current.nextDue = charge.due_on;
         current.cycleStart = charge.period_starts_on;
@@ -213,16 +232,36 @@ export default async function PaymentsPage({
               <div><span className="section-kicker">Estados de cuenta</span><h2>{rows.length} deportistas</h2></div>
             </div>
             <div className="finance-table">
-              <div className="finance-row finance-head">
-                <span>Deportista</span><span>Estado</span><span>Inicio</span><span>Vencimiento</span><span>Saldo</span>
+              <div className={`${styles.financeRow} finance-head`}>
+                <span>Deportista</span><span>Estado</span><span>Qué debe</span><span>Inicio</span><span>Vencimiento</span><span>Saldo total</span>
               </div>
               {rows.map((account) => {
                 const balance = account.charged - account.paid;
                 return (
-                  <Link href={`/pagos/${account.id}`} className="finance-row" key={account.id}>
+                  <Link href={`/pagos/${account.id}`} className={styles.financeRow} key={account.id}>
                     <strong>{account.name}</strong>
                     <span className={`finance-status ${balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending"}`}>
                       {balance === 0 ? "Al día" : account.overdue > 0 ? "Vencido" : "Pendiente"}
+                    </span>
+                    <span className={styles.debtList}>
+                      {account.debts.length === 0 ? (
+                        <small>Sin cargos pendientes</small>
+                      ) : (
+                        <>
+                          {account.debts.slice(0, 3).map((debt, index) => (
+                            <span className={`${styles.debtTag} ${styles[debt.category] ?? ""}`} key={`${debt.concept}-${index}`}>
+                              <span>
+                                <strong>{debt.concept}</strong>
+                                {debt.description && <small>{debt.description}</small>}
+                              </span>
+                              <b>{money(debt.balance)}</b>
+                            </span>
+                          ))}
+                          {account.debts.length > 3 && (
+                            <small className={styles.moreDebts}>＋ {account.debts.length - 3} cargos adicionales</small>
+                          )}
+                        </>
+                      )}
                     </span>
                     <span>{account.cycleStart ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.cycleStart)) : "—"}</span>
                     <strong>{account.nextDue ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.nextDue)) : "Sin deuda"}</strong>
