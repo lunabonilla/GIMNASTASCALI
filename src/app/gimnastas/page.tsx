@@ -2,7 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-type SearchParams = Promise<{ q?: string; created?: string }>;
+type SearchParams = Promise<{
+  q?: string;
+  created?: string;
+  imported?: string;
+  pending?: string;
+}>;
 
 export default async function GymnastsPage({
   searchParams,
@@ -13,7 +18,7 @@ export default async function GymnastsPage({
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const { q = "", created } = await searchParams;
+  const { q = "", created, imported, pending } = await searchParams;
   let query = supabase
     .from("gymnasts")
     .select("id, first_name, last_name, birth_date, identity_document, status, levels(name), gymnast_guardians(guardian_id)")
@@ -47,14 +52,26 @@ export default async function GymnastsPage({
           <h1>Gimnastas</h1>
           <p>Consulta y administra las deportistas del club.</p>
         </div>
-        <Link href="/gimnastas/nueva" className="primary-button">
-          ＋ Nueva gimnasta
-        </Link>
+        <div className="module-actions">
+          <Link href="/gimnastas/importar" className="outline-button">
+            Importar Notion
+          </Link>
+          <Link href="/gimnastas/nueva" className="primary-button">
+            ＋ Nueva gimnasta
+          </Link>
+        </div>
       </header>
 
       <section className="module-content">
         {created && (
           <div className="success-banner">✓ Gimnasta registrada correctamente.</div>
+        )}
+        {imported && (
+          <div className="success-banner">
+            ✓ {imported === "0" ? "La base ya estaba importada" : `${imported} gimnastas importadas`}.
+            {" "}{pending ?? "0"} registros quedaron pendientes por nombre
+            duplicado.
+          </div>
         )}
 
         <form className="search-bar">

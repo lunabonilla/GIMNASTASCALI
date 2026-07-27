@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { parse } from "csv-parse/sync";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createGymnast(formData: FormData) {
@@ -79,4 +80,157 @@ export async function updateGymnast(formData: FormData) {
   revalidatePath("/gimnastas");
   revalidatePath(`/gimnastas/${gymnastId}`);
   redirect(`/gimnastas/${gymnastId}?updated=1`);
+}
+
+type NotionGymnastRow = {
+  "Nombre de la deportista"?: string;
+  "Fecha de nacimiento"?: string;
+  Nivel?: string;
+  Estado?: string;
+};
+
+export async function importGymnasts(formData: FormData) {
+  const file = formData.get("notion_csv");
+
+  if (!(file instanceof File) || file.size === 0) {
+    redirect("/gimnastas/importar?error=Selecciona+el+archivo+CSV");
+  }
+
+  if (file.size > 5_000_000) {
+    redirect("/gimnastas/importar?error=El+archivo+es+demasiado+grande");
+  }
+
+  let rows: NotionGymnastRow[];
+  try {
+    rows = parse(await file.text(), {
+      bom: true,
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    }) as NotionGymnastRow[];
+  } catch {
+    redirect("/gimnastas/importar?error=No+pudimos+leer+el+archivo+CSV");
+  }
+
+  const names = rows
+    .map((row) => row["Nombre de la deportista"]?.trim() ?? "")
+    .filter(Boolean);
+
+  if (names.length === 0) {
+    redirect(
+      "/gimnastas/importar?error=El+archivo+no+contiene+la+columna+de+deportistas",
+    );
+  }
+
+  const nameCounts = new Map<string, number>();
+  for (const name of names) {
+    const key = name.toLocaleLowerCase("es");
+    nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+  }
+
+  const unambiguousRows = rows.filter((row) => {
+    const name = row["Nombre de la deportista"]?.trim();
+    return name && nameCounts.get(name.toLocaleLowerCase("es")) === 1;
+  });
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("staff_profiles")
+    .select("role, active")
+    .single();
+
+  if (!profile?.active || profile.role !== "superadmin") {
+    redirect("/gimnastas/importar?error=No+tienes+permiso+para+importar");
+  }
+
+  const levelNames = Array.from(
+    new Set(
+      unambiguousRows
+        .map((row) => row.Nivel?.trim().toUpperCase() ?? "")
+        .filter(Boolean),
+    ),
+  );
+
+  if (levelNames.length) {
+    const { error: levelError } = await supabase.from("levels").upsert(
+      levelNames.map((name, index) => ({
+        name,
+        sort_order: index + 1,
+        active: true,
+      })),
+      { onConflict: "name" },
+    );
+    if (levelError) {
+      redirect("/gimnastas/importar?error=No+pudimos+preparar+los+niveles");
+    }
+  }
+
+  const { data: levels } = await supabase.from("levels").select("id, name");
+  const levelByName = new Map(
+    (levels ?? []).map((level) => [
+      String(level.name).toUpperCase(),
+      String(level.id),
+    ]),
+  );
+
+  const { data: existing } = await supabase
+    .from("gymnasts")
+    .select("first_name, last_name");
+  const existingNames = new Set(
+    (existing ?? []).map((gymnast) =>
+      `${gymnast.first_name} ${gymnast.last_name}`.trim().toLocaleLowerCase("es"),
+    ),
+  );
+
+  const newGymnasts = unambiguousRows.flatMap((row) => {
+    const fullName = row["Nombre de la deportista"]?.trim() ?? "";
+    if (existingNames.has(fullName.toLocaleLowerCase("es"))) return [];
+
+    const parts = fullName.split(/\s+/);
+    const lastName = parts.length > 1 ? parts.pop() ?? "" : "";
+    const firstName = parts.join(" ") || fullName;
+    const rawStatus = row.Estado?.trim().toUpperCase();
+    const status =
+      rawStatus === "RETIRADO"
+        ? "retired"
+        : rawStatus === "PAUSADO"
+          ? "suspended"
+          : "active";
+    const birthDate = row["Fecha de nacimiento"]?.trim().slice(0, 10) || null;
+    const levelName = row.Nivel?.trim().toUpperCase();
+
+    return [
+      {
+        first_name: firstName,
+        last_name: lastName,
+        birth_date: birthDate,
+        level_id: levelName ? levelByName.get(levelName) ?? null : null,
+        status,
+        joined_on: null,
+        experience_notes: `Importada desde Notion. Nombre original: ${fullName}`,
+      },
+    ];
+  });
+
+  let imported = 0;
+  for (let index = 0; index < newGymnasts.length; index += 100) {
+    const chunk = newGymnasts.slice(index, index + 100);
+    const { error } = await supabase.from("gymnasts").insert(chunk);
+    if (error) {
+      redirect(
+        `/gimnastas/importar?error=${encodeURIComponent(
+          `La importación se detuvo después de ${imported} registros`,
+        )}`,
+      );
+    }
+    imported += chunk.length;
+  }
+
+  if (formData.get("automatic") !== "1") {
+    revalidatePath("/");
+    revalidatePath("/gimnastas");
+  }
+  redirect(
+    `/gimnastas?imported=${imported}&pending=${rows.length - unambiguousRows.length}`,
+  );
 }
