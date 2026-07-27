@@ -18,25 +18,34 @@ const errorUrl = (path: string, message: string) =>
 export async function createCharge(formData: FormData) {
   const gymnastId = value(formData, "gymnast_id");
   const concept = value(formData, "concept");
-  const category = value(formData, "category");
   const dueOn = value(formData, "due_on");
   const amountCents = pesosToCents(value(formData, "amount"));
-  const allowedCategories = [
-    "monthly_fee",
-    "extra_class",
-    "private_class",
-    "product",
-    "competition",
-    "other",
-  ];
+  const productConcepts = new Set([
+    "Trusa de entreno",
+    "Trusa de gala",
+    "Chaqueta y leggins",
+    "Camiseta para niña",
+    "Camiseta para padres",
+    "Camisa polo",
+    "Guantes de barra",
+    "Muñequeras",
+  ]);
+  const category =
+    concept === "Ciclo de entrenamiento" || concept === "Matrícula"
+      ? "monthly_fee"
+      : concept === "Clase personalizada"
+        ? "private_class"
+        : concept === "Clase extra" || concept === "Programa extra de preparación"
+          ? "extra_class"
+          : concept === "Competencia"
+            ? "competition"
+            : productConcepts.has(concept)
+              ? "product"
+              : "other";
 
   if (!gymnastId || !concept || !dueOn || amountCents <= 0) {
     redirect(errorUrl("/pagos/nuevo", "Completa los campos obligatorios"));
   }
-  if (!allowedCategories.includes(category)) {
-    redirect(errorUrl("/pagos/nuevo", "Selecciona un tipo de cargo válido"));
-  }
-
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims?.sub) redirect("/login");

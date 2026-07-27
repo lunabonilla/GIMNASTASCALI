@@ -2914,6 +2914,141 @@ a.finance-row:hover {
   color: #2f2634;
 }
 
+.charge-concept {
+  display: inline-flex;
+  border-radius: 7px;
+  padding: 6px 10px;
+  color: #5f5664;
+  background: #efecf0;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.charge-concept-ciclo-de-entrenamiento,
+.charge-concept-mensualidad,
+.charge-concept-matricula {
+  color: #694387;
+  background: #eadcf5;
+}
+
+.charge-concept-clase-personalizada,
+.charge-concept-personalizado,
+.charge-concept-programa-extra-de-preparacion,
+.charge-concept-clase-extra {
+  color: #356b57;
+  background: #daebe2;
+}
+
+.charge-concept-trusa-de-entreno,
+.charge-concept-trusa-de-gala,
+.charge-concept-chaqueta-y-leggins {
+  color: #8b5f22;
+  background: #fae8bd;
+}
+
+.charge-concept-camiseta-para-nina,
+.charge-concept-camiseta-para-padres,
+.charge-concept-camisa-polo {
+  color: #37658d;
+  background: #dcecff;
+}
+
+.charge-concept-guantes-de-barra,
+.charge-concept-munequeras,
+.charge-concept-chequeo {
+  color: #98566f;
+  background: #f6dfe8;
+}
+
+.charge-concept-competencia {
+  color: #9b4c43;
+  background: #f8ddd9;
+}
+
+.charge-description {
+  margin-bottom: 8px !important;
+  max-width: 680px;
+  font-size: 13px;
+}
+
+.preparation-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(340px, .7fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.preparation-list {
+  display: grid;
+  gap: 16px;
+}
+
+.preparation-card,
+.preparation-form-card {
+  border: 1px solid #e6deea;
+  border-radius: 22px;
+  background: #fff;
+  padding: 24px;
+}
+
+.preparation-card h2 {
+  margin: 12px 0 6px;
+}
+
+.preparation-card p {
+  color: #807787;
+}
+
+.preparation-card dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 0;
+}
+
+.preparation-card dl div {
+  border-radius: 12px;
+  background: #faf7fc;
+  padding: 12px;
+}
+
+.preparation-card dt {
+  color: #8a818f;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.preparation-card dd {
+  margin: 5px 0 0;
+  color: #3d3243;
+  font-weight: 700;
+}
+
+.preparation-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #716878;
+  background: #efecf0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preparation-status.open { color: #35658e; background: #dcecff; }
+.preparation-status.active { color: #347154; background: #dceee4; }
+.preparation-status.finished { color: #704889; background: #eadcf5; }
+.preparation-status.cancelled { color: #9c4b4b; background: #f7dddd; }
+
+.preparation-form-card {
+  position: sticky;
+  top: 24px;
+}
+
+.preparation-form-card h2 {
+  margin: 4px 0 20px;
+}
+
 .charge-main p {
   margin: 0;
   color: #817788;
@@ -3006,6 +3141,18 @@ a.finance-row:hover {
 
   .inline-payment-form {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .preparation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .preparation-card dl {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .preparation-form-card {
+    position: static;
   }
 }
 

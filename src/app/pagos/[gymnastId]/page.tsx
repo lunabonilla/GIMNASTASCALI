@@ -18,6 +18,9 @@ const categoryLabels: Record<string, string> = {
   competition: "Competencia",
   other: "Otro",
 };
+const conceptClass = (concept: string) =>
+  `charge-concept-${concept.normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 
 export default async function AccountPage({
   params,
@@ -116,7 +119,8 @@ export default async function AccountPage({
                   <div className="charge-main">
                     <div>
                       <span className="section-kicker">{categoryLabels[charge.category] ?? "Cargo"}</span>
-                      <h2>{charge.concept}</h2>
+                      <h2><span className={`charge-concept ${conceptClass(charge.concept)}`}>{charge.concept}</span></h2>
+                      {charge.description && <p className="charge-description">{charge.description}</p>}
                       <p>Vence: {new Intl.DateTimeFormat("es-CO", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${charge.due_on}T00:00:00Z`))}</p>
                     </div>
                     <div className="charge-amount">

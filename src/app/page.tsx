@@ -15,6 +15,7 @@ const navigation = [
   { label: "Gimnastas", icon: "○", href: "/gimnastas" },
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓", href: "/asistencia" },
+  { label: "Programas de preparación", icon: "★", href: "/programas-preparacion" },
   { label: "Cartera y pagos", icon: "$", href: "/pagos" },
   { label: "Inventario", icon: "□", href: "/inventario" },
   { label: "Ventas", icon: "↗", href: "/ventas" },
@@ -34,6 +35,13 @@ const modules = [
     action: "Crear grupo",
     icon: "▦",
     href: "/grupos/nuevo",
+  },
+  {
+    title: "Programa de preparación",
+    description: "Crea una preparación adicional y organiza sus participantes.",
+    action: "Gestionar programas",
+    icon: "★",
+    href: "/programas-preparacion",
   },
   {
     title: "Registrar pago",

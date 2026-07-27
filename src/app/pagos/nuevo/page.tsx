@@ -45,20 +45,31 @@ export default async function NewChargePage({
               ))}
             </select>
           </label>
-          <label>
-            Tipo de cargo *
-            <select name="category" defaultValue="monthly_fee" required>
-              <option value="monthly_fee">Mensualidad</option>
-              <option value="extra_class">Clase extra</option>
-              <option value="private_class">Clase personalizada</option>
-              <option value="product">Artículo o uniforme</option>
-              <option value="competition">Competencia</option>
-              <option value="other">Otro</option>
+          <label className="full-field">
+            Concepto del cargo *
+            <select name="concept" defaultValue="" required>
+              <option value="" disabled>Seleccionar qué se va a cobrar</option>
+              <optgroup label="Entrenamiento">
+                <option value="Ciclo de entrenamiento">Ciclo de entrenamiento / mensualidad</option>
+                <option value="Clase personalizada">Clase personalizada</option>
+                <option value="Clase extra">Clase extra</option>
+                <option value="Programa extra de preparación">Programa extra de preparación</option>
+                <option value="Matrícula">Matrícula</option>
+                <option value="Competencia">Competencia</option>
+                <option value="Chequeo">Chequeo</option>
+              </optgroup>
+              <optgroup label="Uniformes y artículos">
+                <option value="Trusa de entreno">Trusa de entreno</option>
+                <option value="Trusa de gala">Trusa de gala</option>
+                <option value="Chaqueta y leggins">Chaqueta y leggins</option>
+                <option value="Camiseta para niña">Camiseta para niña</option>
+                <option value="Camiseta para padres">Camiseta para padres</option>
+                <option value="Camisa polo">Camisa polo</option>
+                <option value="Guantes de barra">Guantes de barra</option>
+                <option value="Muñequeras">Muñequeras</option>
+              </optgroup>
+              <option value="Otro cargo">Otro cargo</option>
             </select>
-          </label>
-          <label>
-            Concepto *
-            <input name="concept" placeholder="Ej. Mensualidad agosto" required />
           </label>
           <label>
             Valor en pesos *
