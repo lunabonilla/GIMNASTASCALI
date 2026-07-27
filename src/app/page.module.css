@@ -1,0 +1,142 @@
+.todaySchedule {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+
+.scheduleRow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #f0edf2;
+  color: inherit;
+  padding: 16px 4px;
+  text-decoration: none;
+}
+
+.scheduleRow:hover strong {
+  color: var(--purple);
+}
+
+.scheduleTime {
+  border-radius: 10px;
+  color: var(--purple);
+  background: var(--purple-soft);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 9px 10px;
+  text-align: center;
+}
+
+.scheduleRow strong,
+.scheduleRow small {
+  display: block;
+}
+
+.scheduleRow strong {
+  font-size: 13px;
+}
+
+.scheduleRow small,
+.scheduleCount {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.alertList {
+  display: flex;
+  flex-direction: column;
+}
+
+.alertList > a {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid #f0edf2;
+  color: inherit;
+  padding: 14px 4px;
+  text-decoration: none;
+}
+
+.alertList > a:last-child {
+  border-bottom: 0;
+}
+
+.alertList p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.upcomingSection {
+  margin-top: 28px;
+}
+
+.competitionStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.competitionSummary {
+  display: flex;
+  min-width: 0;
+  min-height: 130px;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  color: inherit;
+  background: var(--white);
+  padding: 18px;
+  text-decoration: none;
+}
+
+.competitionSummary:hover {
+  border-color: #cfb9df;
+  box-shadow: 0 10px 24px rgba(65, 33, 88, 0.08);
+}
+
+.competitionStatus {
+  border-radius: 999px;
+  color: #89691b;
+  background: #fff2c9;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.competitionStatus.confirmed {
+  color: #326e5a;
+  background: #e3f3eb;
+}
+
+.competitionSummary strong {
+  margin: 13px 0 7px;
+  font-size: 13px;
+}
+
+.competitionSummary small,
+.noCompetitions {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 780px) {
+  .competitionStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleRow {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .scheduleCount {
+    grid-column: 2;
+  }
+}

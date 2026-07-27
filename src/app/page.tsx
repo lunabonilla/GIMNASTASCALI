@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import styles from "./page.module.css";
 
 type StaffProfile = {
   full_name: string;
@@ -360,7 +361,7 @@ export default async function Home() {
                 <Link href="/grupos" className="text-button">Ver horarios →</Link>
               </div>
               {schedule.length ? (
-                <div className="today-schedule">
+                <div className={styles.todaySchedule}>
                   {schedule.map((slot) => {
                     const relation = slot.training_groups;
                     const group = Array.isArray(relation) ? relation[0] : relation;
@@ -369,8 +370,8 @@ export default async function Home() {
                       ? coachRelation[0]
                       : coachRelation;
                     return (
-                      <Link href={`/asistencia/${group?.id}`} className="schedule-row" key={slot.id}>
-                        <span className="schedule-time">{slot.starts_at.slice(0, 5)}</span>
+                      <Link href={`/asistencia/${group?.id}`} className={styles.scheduleRow} key={slot.id}>
+                        <span className={styles.scheduleTime}>{slot.starts_at.slice(0, 5)}</span>
                         <span>
                           <strong>{group?.name}</strong>
                           <small>
@@ -378,7 +379,7 @@ export default async function Home() {
                             {slot.location ? ` · ${slot.location}` : ""}
                           </small>
                         </span>
-                        <span className="schedule-count">
+                        <span className={styles.scheduleCount}>
                           {group?.enrollments?.length ?? 0} gimnastas
                         </span>
                       </Link>
@@ -411,7 +412,7 @@ export default async function Home() {
                   <div><h3>Todo bajo control</h3><p>No tienes alertas pendientes por ahora.</p></div>
                 </div>
               )}
-              <div className="alert-list">
+              <div className={styles.alertList}>
                 <Link href="/pagos">
                   <span className="dot purple" />
                   <p>Cobros vencidos</p>
@@ -431,7 +432,7 @@ export default async function Home() {
             </section>
           </div>
 
-          <section className="upcoming-section">
+          <section className={styles.upcomingSection}>
             <div className="section-heading">
               <div>
                 <span className="section-kicker">Calendario deportivo</span>
@@ -439,10 +440,10 @@ export default async function Home() {
               </div>
               <Link href="/competencias" className="text-button">Ver calendario completo →</Link>
             </div>
-            <div className="competition-strip">
+            <div className={styles.competitionStrip}>
               {(upcomingCompetitions ?? []).map((competition) => (
-                <Link href="/competencias" className="competition-summary" key={competition.id}>
-                  <span className={`competition-status ${competition.status}`}>
+                <Link href="/competencias" className={styles.competitionSummary} key={competition.id}>
+                  <span className={`${styles.competitionStatus} ${competition.status === "confirmed" ? styles.confirmed : ""}`}>
                     {competition.status === "confirmed" ? "Confirmada" : "En definición"}
                   </span>
                   <strong>{competition.name}</strong>
@@ -456,7 +457,7 @@ export default async function Home() {
                 </Link>
               ))}
               {!upcomingCompetitions?.length && (
-                <p className="no-competitions">No hay competencias próximas con fecha confirmada.</p>
+                <p className={styles.noCompetitions}>No hay competencias próximas con fecha confirmada.</p>
               )}
             </div>
           </section>
