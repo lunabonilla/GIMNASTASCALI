@@ -13,7 +13,7 @@ type Gymnast = {
   isMakeup: boolean;
 };
 
-const options: Array<{
+const regularOptions: Array<{
   value: AttendanceStatus;
   icon: string;
   shortLabel: string;
@@ -22,7 +22,12 @@ const options: Array<{
   { value: "present", icon: "✓", shortLabel: "Presente", label: "Presente" },
   { value: "absent", icon: "×", shortLabel: "No asistió", label: "No asistió" },
   { value: "excused", icon: "!", shortLabel: "Excusa", label: "Con excusa" },
+];
+
+const makeupOptions: typeof regularOptions = [
   { value: "makeup", icon: "↻", shortLabel: "Recupera", label: "Recuperación" },
+  { value: "absent", icon: "×", shortLabel: "No asistió", label: "No asistió" },
+  { value: "excused", icon: "!", shortLabel: "Excusa", label: "Con excusa" },
 ];
 
 export function AttendanceForm({
@@ -77,6 +82,7 @@ export function AttendanceForm({
       <div className={styles.list}>
         {gymnasts.map((gymnast, index) => {
           const selected = statuses[gymnast.id];
+          const availableOptions = gymnast.isMakeup ? makeupOptions : regularOptions;
           return (
             <article
               className={`${styles.row} ${gymnast.isMakeup ? styles.makeupRow : ""}`}
@@ -95,7 +101,7 @@ export function AttendanceForm({
                 </div>
               </div>
               <div className={styles.options} role="group" aria-label={`Asistencia de ${gymnast.name}`}>
-                {options.map((option) => (
+                {availableOptions.map((option) => (
                   <button
                     type="button"
                     key={option.value}
