@@ -1904,3 +1904,251 @@ nav {
     padding: 46px 24px;
   }
 }
+.finance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.finance-summary article,
+.account-totals > div {
+  background: #fff;
+  border: 1px solid #e9e2ef;
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.finance-summary span,
+.account-totals span {
+  color: #756d7d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.finance-summary strong,
+.account-totals strong {
+  color: #281d2c;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.finance-summary small {
+  color: #918999;
+}
+
+.finance-summary .overdue {
+  background: #fff8f4;
+  border-color: #f4d8cc;
+}
+
+.search-form {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.search-form input {
+  flex: 1;
+  border: 1px solid #dfd6e6;
+  border-radius: 16px;
+  padding: 16px 18px;
+  font: inherit;
+}
+
+.search-form button,
+.trial-card form button {
+  border: 0;
+  border-radius: 14px;
+  background: #62269a;
+  color: #fff;
+  padding: 0 24px;
+  font: inherit;
+  font-weight: 800;
+}
+
+.finance-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.finance-row {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 19px 26px;
+  color: #403647;
+  text-decoration: none;
+  border-top: 1px solid #eee8f1;
+}
+
+a.finance-row:hover {
+  background: #faf7fc;
+}
+
+.finance-head {
+  color: #817788;
+  background: #fbf9fc;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.finance-status {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.finance-status.paid {
+  color: #197447;
+  background: #eaf8f0;
+}
+
+.finance-status.pending {
+  color: #9b6516;
+  background: #fff3d9;
+}
+
+.finance-status.late {
+  color: #b33d3d;
+  background: #ffebeb;
+}
+
+.account-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.account-totals .balance {
+  background: #f5edfb;
+  border-color: #dcc5ee;
+}
+
+.charge-list {
+  display: grid;
+  gap: 18px;
+}
+
+.charge-card {
+  background: #fff;
+  border: 1px solid #e7dfea;
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.charge-main,
+.charge-progress,
+.payment-history > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.charge-main h2 {
+  margin: 6px 0;
+  color: #2f2634;
+}
+
+.charge-main p {
+  margin: 0;
+  color: #817788;
+}
+
+.charge-amount {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 22px;
+}
+
+.charge-progress {
+  margin-top: 20px;
+  border-top: 1px solid #eee8f1;
+  padding-top: 16px;
+  color: #716878;
+}
+
+.payment-history {
+  margin-top: 14px;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: #f4fbf7;
+  color: #347154;
+}
+
+.payment-history > div {
+  padding: 6px 0;
+}
+
+.payment-box {
+  margin-top: 16px;
+}
+
+.payment-box summary {
+  cursor: pointer;
+  color: #62269a;
+  font-weight: 800;
+}
+
+.inline-payment-form {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  background: #faf8fc;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.inline-payment-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #62586a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inline-payment-form input,
+.inline-payment-form select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ddd3e3;
+  border-radius: 11px;
+  padding: 11px;
+  background: #fff;
+  font: inherit;
+}
+
+.inline-payment-form button {
+  justify-self: end;
+}
+
+@media (max-width: 850px) {
+  .finance-summary,
+  .account-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-head {
+    display: none;
+  }
+
+  .finance-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .inline-payment-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}

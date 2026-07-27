@@ -15,7 +15,7 @@ const navigation = [
   { label: "Gimnastas", icon: "○", href: "/gimnastas" },
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓", href: "/asistencia" },
-  { label: "Cartera y pagos", icon: "$" },
+  { label: "Cartera y pagos", icon: "$", href: "/pagos" },
   { label: "Inventario", icon: "□" },
   { label: "Ventas", icon: "↗" },
 ];
@@ -40,7 +40,7 @@ const modules = [
     description: "Aplica mensualidades, abonos o compras de artículos.",
     action: "Nuevo pago",
     icon: "$",
-    href: "#",
+    href: "/pagos/nuevo",
   },
 ];
 
@@ -94,6 +94,7 @@ export default async function Home() {
     { count: pausedGymnasts },
     { count: todayTrials },
     { count: activeGroups },
+    { data: billingCharges },
   ] = await Promise.all([
     supabase
       .from("gymnasts")
@@ -112,7 +113,20 @@ export default async function Home() {
       .from("training_groups")
       .select("*", { count: "exact", head: true })
       .eq("active", true),
+    supabase
+      .from("billing_charges")
+      .select("amount_cents, payment_allocations(amount_cents)")
+      .is("voided_at", null),
   ]);
+
+  const pendingBalance = (billingCharges ?? []).reduce((total, charge) => {
+    const paid = (charge.payment_allocations ?? []).reduce(
+      (subtotal: number, allocation: { amount_cents: number }) =>
+        subtotal + Number(allocation.amount_cents),
+      0,
+    );
+    return total + Number(charge.amount_cents) - paid;
+  }, 0);
 
   const metrics = [
     {
@@ -131,8 +145,12 @@ export default async function Home() {
     },
     {
       label: "Cartera pendiente",
-      value: "$ 0",
-      note: "Activaremos el módulo de pagos",
+      value: new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        maximumFractionDigits: 0,
+      }).format(pendingBalance / 100),
+      note: "Saldo total por recaudar",
       tone: "mint",
       icon: "$",
     },
