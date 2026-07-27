@@ -33,8 +33,7 @@ export default async function EditGroupPage({
   if (!group) notFound();
 
   const slots = group.group_schedule_slots ?? [];
-  const selectedDays = new Set(slots.map((slot) => slot.weekday));
-  const firstSlot = slots[0];
+  const slotsByDay = new Map(slots.map((slot) => [slot.weekday, slot]));
 
   return (
     <main className="form-page">
@@ -63,21 +62,27 @@ export default async function EditGroupPage({
           </fieldset>
           <fieldset>
             <legend>Días y horario semanal</legend>
-            <div className="form-grid">
-              <div className="full-field">
-                <span className="field-label">Días de entrenamiento *</span>
-                <div className="weekday-picker">
-                  {days.map(([day, label]) => (
-                    <label key={day}>
-                      <input type="checkbox" name="weekdays" value={day} defaultChecked={selectedDays.has(day)} />
+            <p className="schedule-editor-help">
+              Marca los días de entrenamiento y define el horario de cada uno.
+            </p>
+            <div className="schedule-editor">
+              <div className="schedule-editor-head">
+                <span>Día</span><span>Inicio</span><span>Final</span><span>Sede o espacio</span>
+              </div>
+              {days.map(([day, label]) => {
+                const slot = slotsByDay.get(day);
+                return (
+                  <div className="schedule-editor-row" key={day}>
+                    <label className="schedule-day">
+                      <input type="checkbox" name="weekdays" value={day} defaultChecked={Boolean(slot)} />
                       <span>{label}</span>
                     </label>
-                  ))}
-                </div>
-              </div>
-              <label>Sede o espacio<input name="location" defaultValue={firstSlot?.location ?? ""} /></label>
-              <label>Hora de inicio *<input name="starts_at" type="time" required defaultValue={firstSlot?.starts_at?.slice(0, 5) ?? ""} /></label>
-              <label>Hora de finalización *<input name="ends_at" type="time" required defaultValue={firstSlot?.ends_at?.slice(0, 5) ?? ""} /></label>
+                    <label><span>Hora de inicio</span><input name={`starts_at_${day}`} type="time" defaultValue={slot?.starts_at?.slice(0, 5) ?? ""} /></label>
+                    <label><span>Hora final</span><input name={`ends_at_${day}`} type="time" defaultValue={slot?.ends_at?.slice(0, 5) ?? ""} /></label>
+                    <label><span>Sede o espacio</span><input name={`location_${day}`} defaultValue={slot?.location ?? ""} placeholder="Sede principal" /></label>
+                  </div>
+                );
+              })}
             </div>
           </fieldset>
           <div className="form-actions">

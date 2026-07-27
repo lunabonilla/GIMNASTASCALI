@@ -1,0 +1,261 @@
+.dayControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #e6deeb;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #6b2b9c, #8545b5);
+  color: white;
+  padding: 22px 25px;
+}
+
+.dayControl span,
+.dayControl label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dayControl h2 {
+  margin: 5px 0 0;
+  color: white;
+  font-size: 25px;
+  text-transform: capitalize;
+}
+
+.dayControl form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.dayControl label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dayControl input,
+.dayControl button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 11px;
+}
+
+.dayControl button {
+  background: white;
+  color: #622790;
+  font-weight: 850;
+}
+
+.viewTabs {
+  display: flex;
+  gap: 7px;
+  margin: 22px 0 12px;
+}
+
+.viewTabs a {
+  border-radius: 9px;
+  color: #776e7b;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 9px 13px;
+  text-decoration: none;
+}
+
+.viewTabs .active {
+  background: #eee4f5;
+  color: #652991;
+}
+
+.scheduleList {
+  overflow: hidden;
+  border: 1px solid #e5deea;
+  border-radius: 16px;
+  background: white;
+}
+
+.listHead,
+.scheduleRow {
+  display: grid;
+  grid-template-columns: 80px minmax(170px, 1fr) minmax(190px, 1.1fr) minmax(190px, 1.1fr) 85px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.listHead {
+  background: #f8f6f9;
+  color: #918895;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.scheduleRow {
+  border-top: 1px solid #eee9f0;
+}
+
+.time,
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.time strong {
+  color: #63268f;
+  font-size: 14px;
+}
+
+.time small,
+.group small,
+.scheduleRow label small {
+  color: #918895;
+  font-size: 9px;
+}
+
+.group strong {
+  font-size: 12px;
+}
+
+.scheduleRow label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scheduleRow label > span {
+  display: none;
+}
+
+.scheduleRow select,
+.scheduleRow input {
+  width: 100%;
+  border: 1px solid #ddd5e2;
+  border-radius: 8px;
+  background: white;
+  padding: 9px;
+}
+
+.scheduleRow button {
+  border: 0;
+  border-radius: 8px;
+  background: #652991;
+  color: white;
+  font-size: 10px;
+  font-weight: 850;
+  padding: 10px;
+}
+
+.teacherBoard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.teacherBoard article {
+  overflow: hidden;
+  border: 1px solid #e4dce9;
+  border-radius: 15px;
+  background: white;
+}
+
+.teacherHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f2fa;
+  padding: 14px;
+}
+
+.teacherHeading > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #6b2b99;
+  color: white;
+  font-weight: 900;
+}
+
+.teacherHeading div,
+.teacherSlot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.teacherHeading small,
+.teacherSlot small {
+  color: #918895;
+  font-size: 9px;
+}
+
+.teacherSlot {
+  border-top: 1px solid #eee9f0;
+  padding: 12px 14px;
+}
+
+.teacherSlot strong {
+  color: #662991;
+}
+
+.teacherSlot span {
+  font-size: 11px;
+  font-weight: 750;
+}
+
+@media (max-width: 900px) {
+  .listHead {
+    display: none;
+  }
+
+  .scheduleRow {
+    grid-template-columns: 70px 1fr;
+    margin: 10px;
+    border: 1px solid #e5deea;
+    border-radius: 12px;
+  }
+
+  .scheduleRow label {
+    grid-column: 1 / -1;
+  }
+
+  .scheduleRow label > span {
+    display: block;
+    color: #918895;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .scheduleRow button {
+    grid-column: 1 / -1;
+  }
+
+  .teacherBoard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .dayControl {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dayControl form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .teacherBoard {
+    grid-template-columns: 1fr;
+  }
+}
+

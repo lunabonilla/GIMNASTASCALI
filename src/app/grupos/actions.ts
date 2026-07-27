@@ -107,8 +107,12 @@ export async function updateGroup(formData: FormData) {
     .getAll("weekdays")
     .map(Number)
     .filter((day) => Number.isInteger(day) && day >= 1 && day <= 7);
-  const startsAt = value(formData, "starts_at");
-  const endsAt = value(formData, "ends_at");
+  const schedule = weekdays.map((weekday) => ({
+    weekday,
+    startsAt: value(formData, `starts_at_${weekday}`),
+    endsAt: value(formData, `ends_at_${weekday}`),
+    location: value(formData, `location_${weekday}`),
+  }));
 
   const editUrl = `/grupos/${groupId}/editar`;
   if (
@@ -116,9 +120,8 @@ export async function updateGroup(formData: FormData) {
     !name ||
     !Number.isInteger(capacity) ||
     capacity < 1 ||
-    !startsAt ||
-    !endsAt ||
     weekdays.length === 0 ||
+    schedule.some((slot) => !slot.startsAt || !slot.endsAt) ||
     !["Minis", "Regular", "Intensivo"].includes(billingProgram)
   ) {
     redirect(`${editUrl}?error=Completa+los+campos+obligatorios`);
@@ -126,8 +129,8 @@ export async function updateGroup(formData: FormData) {
   if (billingProgram !== "Intensivo" && weekdays.length > 2) {
     redirect(`${editUrl}?error=Minis+y+Regular+admiten+máximo+2+días+semanales`);
   }
-  if (endsAt <= startsAt) {
-    redirect(`${editUrl}?error=La+hora+de+finalización+debe+ser+posterior`);
+  if (schedule.some((slot) => slot.endsAt <= slot.startsAt)) {
+    redirect(`${editUrl}?error=La+hora+final+de+cada+día+debe+ser+posterior+a+la+hora+de+inicio`);
   }
 
   const supabase = await createClient();
@@ -187,12 +190,12 @@ export async function updateGroup(formData: FormData) {
 
   const { error: scheduleError } = await supabase
     .from("group_schedule_slots")
-    .insert(weekdays.map((weekday) => ({
+    .insert(schedule.map((slot) => ({
       group_id: groupId,
-      weekday,
-      starts_at: startsAt,
-      ends_at: endsAt,
-      location: value(formData, "location") || null,
+      weekday: slot.weekday,
+      starts_at: slot.startsAt,
+      ends_at: slot.endsAt,
+      location: slot.location || null,
     })));
   if (scheduleError) redirect(`${editUrl}?error=No+pudimos+guardar+el+nuevo+horario`);
 

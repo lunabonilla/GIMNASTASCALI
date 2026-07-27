@@ -20,6 +20,7 @@ const navigation = [
     items: [
       { label: "Gimnastas", icon: "○", href: "/gimnastas" },
       { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
+      { label: "Jornada de profesores", icon: "◷", href: "/horarios-profesores" },
       { label: "Asistencia", icon: "✓", href: "/asistencia" },
       { label: "Clases de prueba", icon: "◇", href: "/pruebas" },
     ],
