@@ -79,6 +79,10 @@ export default async function GymnastsPage({
   const dayLabels: Record<number, string> = {
     1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom",
   };
+  const tagClass = (value: string | null | undefined, prefix: string) =>
+    `${prefix}-${String(value ?? "none")
+      .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+      .toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
     <main className="module-page">
@@ -194,8 +198,8 @@ export default async function GymnastsPage({
                         </Link>
                         <small className="table-secondary">{gymnast.identity_document || "Documento pendiente"}</small>
                       </td>
-                      <td><span className="notion-tag blue">{billing?.program || "Sin programa"}</span></td>
-                      <td><span className="notion-tag purple">{gymnastLevel?.name || "Sin asignar"}</span></td>
+                      <td><span className={`notion-tag ${tagClass(billing?.program, "program")}`}>{billing?.program || "Sin programa"}</span></td>
+                      <td><span className={`notion-tag ${tagClass(gymnastLevel?.name, "level")}`}>{gymnastLevel?.name || "Sin asignar"}</span></td>
                       <td>
                         <strong className="table-group-name">{group?.name || "Sin grupo"}</strong>
                         <small className="table-secondary">{days || "Días pendientes"}</small>

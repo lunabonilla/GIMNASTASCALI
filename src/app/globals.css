@@ -808,6 +808,8 @@ th {
   padding: 5px 8px;
   font-size: 12px;
   font-weight: 700;
+  font-style: normal;
+  white-space: nowrap;
 }
 
 .notion-tag.blue {
@@ -819,6 +821,24 @@ th {
   color: #6f4c85;
   background: #eee2f5;
 }
+
+.program-intensivo { color: #315f8d; background: #dcecff; }
+.program-regular { color: #9a4e73; background: #f9e0ec; }
+.program-minis { color: #8b681f; background: #fff0bd; }
+.program-none,
+.program-sin-programa,
+.level-none,
+.level-sin-nivel,
+.level-sin-asignar { color: #766d7b; background: #eeeaf0; }
+.level-circuito { color: #996028; background: #ffe8cb; }
+.level-prenivel,
+.level-nivel-4 { color: #32658f; background: #dcecff; }
+.level-nivel-1 { color: #714b89; background: #ebdef5; }
+.level-nivel-2 { color: #387059; background: #dcece3; }
+.level-nivel-3 { color: #97536f; background: #f5dfe8; }
+.level-nivel-5 { color: #8b681f; background: #fff0bd; }
+.level-nivel-6 { color: #653985; background: #e8d5f5; }
+.level-telas { color: #2f727a; background: #d7eff1; }
 
 .profile-hero {
   padding: 42px max(32px, calc((100vw - 1500px) / 2));
@@ -1055,6 +1075,55 @@ th {
   border-color: #62269a;
   color: #fff;
   background: #62269a;
+}
+
+.payment-views a:nth-child(2).active {
+  border-color: #cf4f59;
+  background: #cf4f59;
+}
+
+.payment-views a:nth-child(3).active {
+  border-color: #399064;
+  background: #399064;
+}
+
+.payment-views a:nth-child(4).active {
+  border-color: #477fba;
+  background: #477fba;
+}
+
+.payment-views a:nth-child(6).active {
+  border-color: #d58a31;
+  background: #d58a31;
+}
+
+.data-panel table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-panel th {
+  color: #756c7b;
+  background: #faf8fb;
+  border-right: 1px solid #eee9f1;
+  text-transform: none;
+}
+
+.data-panel td {
+  border-right: 1px solid #eee9f1;
+}
+
+.data-panel td:last-child,
+.data-panel th:last-child {
+  border-right: 0;
+}
+
+.data-panel tbody tr {
+  transition: background .15s ease;
+}
+
+.data-panel tbody tr:hover {
+  background: #fbf7fd;
 }
 
 @media (max-width: 1000px) {
@@ -2745,6 +2814,27 @@ nav {
   font: inherit;
 }
 
+.finance-filters {
+  align-items: stretch;
+}
+
+.finance-filters select {
+  min-width: 170px;
+  border: 1px solid #dfd6e6;
+  border-radius: 16px;
+  padding: 0 42px 0 16px;
+  color: #4f4455;
+  background: #fff;
+  font: inherit;
+}
+
+.finance-filters > a {
+  align-self: center;
+  color: #62269a;
+  font-weight: 750;
+  text-decoration: none;
+}
+
 .search-form button,
 .trial-card form button {
   border: 0;
@@ -2763,7 +2853,7 @@ nav {
 
 .finance-row {
   display: grid;
-  grid-template-columns: 1.5fr repeat(4, 1fr);
+  grid-template-columns: 1.55fr .9fr .85fr .8fr 1fr 1fr 1fr;
   align-items: center;
   gap: 18px;
   padding: 19px 26px;
@@ -2933,6 +3023,17 @@ a.finance-row:hover {
 
   .finance-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .finance-filters {
+    flex-direction: column;
+  }
+
+  .finance-filters input,
+  .finance-filters select,
+  .finance-filters button {
+    width: 100%;
+    min-height: 52px;
   }
 
   .inline-payment-form {
