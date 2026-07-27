@@ -10,13 +10,27 @@ const value = (formData: FormData, name: string) =>
 export async function createGroup(formData: FormData) {
   const name = value(formData, "name");
   const capacity = Number(value(formData, "capacity"));
-  const monthlyFee = Number(value(formData, "monthly_fee"));
-  const weekday = Number(value(formData, "weekday"));
+  const billingProgram = value(formData, "billing_program");
+  const weekdays = formData
+    .getAll("weekdays")
+    .map(Number)
+    .filter((day) => Number.isInteger(day) && day >= 1 && day <= 7);
   const startsAt = value(formData, "starts_at");
   const endsAt = value(formData, "ends_at");
 
-  if (!name || !Number.isInteger(capacity) || capacity < 1 || !startsAt || !endsAt || !weekday) {
+  if (
+    !name ||
+    !Number.isInteger(capacity) ||
+    capacity < 1 ||
+    !startsAt ||
+    !endsAt ||
+    weekdays.length === 0 ||
+    !["Minis", "Regular", "Intensivo"].includes(billingProgram)
+  ) {
     redirect("/grupos/nuevo?error=Completa+los+campos+obligatorios");
+  }
+  if (billingProgram !== "Intensivo" && weekdays.length > 2) {
+    redirect("/grupos/nuevo?error=Minis+y+Regular+admiten+máximo+2+días+semanales");
   }
   if (endsAt <= startsAt) {
     redirect("/grupos/nuevo?error=La+hora+de+finalización+debe+ser+posterior");
@@ -31,17 +45,32 @@ export async function createGroup(formData: FormData) {
     redirect("/grupos/nuevo?error=No+tienes+permiso+para+crear+grupos");
   }
 
+  let rateQuery = supabase
+    .from("billing_rate_plans")
+    .select("amount_cents")
+    .eq("program", billingProgram)
+    .eq("effective_year", 2026)
+    .eq("active", true);
+  rateQuery = billingProgram === "Intensivo"
+    ? rateQuery.is("days_per_week", null)
+    : rateQuery.eq("days_per_week", weekdays.length);
+  const { data: rate } = await rateQuery.single();
+  if (!rate) {
+    redirect("/grupos/nuevo?error=No+encontramos+la+tarifa+para+este+programa+y+frecuencia");
+  }
+
   const { data: group, error: groupError } = await supabase
     .from("training_groups")
     .insert({
       name,
-      group_type: value(formData, "group_type") || "regular",
+      group_type: billingProgram === "Intensivo" ? "integral" : "regular",
+      billing_program: billingProgram,
       level_id: value(formData, "level_id") || null,
       coach_profile_id: value(formData, "coach_profile_id") || null,
       minimum_age: value(formData, "minimum_age") ? Number(value(formData, "minimum_age")) : null,
       maximum_age: value(formData, "maximum_age") ? Number(value(formData, "maximum_age")) : null,
       capacity,
-      monthly_fee_cents: Number.isFinite(monthlyFee) ? Math.round(monthlyFee * 100) : 0,
+      monthly_fee_cents: rate.amount_cents,
     })
     .select("id")
     .single();
@@ -50,13 +79,15 @@ export async function createGroup(formData: FormData) {
     redirect("/grupos/nuevo?error=No+pudimos+crear+el+grupo");
   }
 
-  const { error: scheduleError } = await supabase.from("group_schedule_slots").insert({
-    group_id: group.id,
-    weekday,
-    starts_at: startsAt,
-    ends_at: endsAt,
-    location: value(formData, "location") || null,
-  });
+  const { error: scheduleError } = await supabase
+    .from("group_schedule_slots")
+    .insert(weekdays.map((weekday) => ({
+      group_id: group.id,
+      weekday,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      location: value(formData, "location") || null,
+    })));
   if (scheduleError) {
     await supabase.from("training_groups").delete().eq("id", group.id);
     redirect("/grupos/nuevo?error=No+pudimos+guardar+el+horario");
@@ -76,7 +107,11 @@ export async function enrollGymnast(formData: FormData) {
 
   const supabase = await createClient();
   const [{ data: group }, { count }, { data: auth }] = await Promise.all([
-    supabase.from("training_groups").select("capacity").eq("id", groupId).single(),
+    supabase
+      .from("training_groups")
+      .select("capacity, billing_program, group_schedule_slots(weekday)")
+      .eq("id", groupId)
+      .single(),
     supabase
       .from("enrollments")
       .select("*", { count: "exact", head: true })
@@ -106,8 +141,23 @@ export async function enrollGymnast(formData: FormData) {
     redirect(`/grupos/${groupId}?error=${encodeURIComponent(message)}`);
   }
 
+  const weeklyDays = new Set(
+    (group.group_schedule_slots ?? []).map((slot: { weekday: number }) => slot.weekday),
+  ).size;
+  if (group.billing_program) {
+    await supabase.from("gymnast_billing_profiles").upsert({
+      gymnast_id: gymnastId,
+      program: group.billing_program,
+      days_per_week:
+        group.billing_program === "Intensivo"
+          ? null
+          : Math.min(2, Math.max(1, weeklyDays)),
+    });
+  }
+
   revalidatePath("/");
   revalidatePath("/grupos");
+  revalidatePath("/pagos/frecuencias");
   revalidatePath(`/grupos/${groupId}`);
   redirect(`/grupos/${groupId}?assigned=1`);
 }

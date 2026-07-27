@@ -18,12 +18,12 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
 
   return (
     <main className="form-page">
-      <div className="form-card">
+      <div className="form-card wide-form">
         <Link href="/grupos" className="back-link">← Volver a grupos</Link>
         <div className="form-heading">
           <span className="section-kicker">Nuevo grupo</span>
           <h1>Crear grupo y horario</h1>
-          <p>Empieza con una jornada; después podrás añadir más horarios.</p>
+          <p>Selecciona el programa, los días y un horario compartido para crear la clase completa.</p>
         </div>
         {error && <div className="error-banner">{error}</div>}
         <form action={createGroup} className="gymnast-form">
@@ -31,19 +31,32 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
             <legend>Información del grupo</legend>
             <div className="form-grid">
               <label>Nombre del grupo *<input name="name" required placeholder="Ej. Nivel 1 - Tarde" /></label>
-              <label>Modalidad *<select name="group_type" defaultValue="regular"><option value="regular">Regular</option><option value="integral">Integral</option></select></label>
+              <label>Programa *<select name="billing_program" defaultValue="Regular"><option value="Minis">Minis · clases de 1 hora</option><option value="Regular">Regular · clases de 1,5 horas</option><option value="Intensivo">Integral / Intensivo</option></select></label>
               <label>Nivel<select name="level_id" defaultValue=""><option value="">Sin asignar</option>{levels.map((level) => <option value={level.id} key={level.id}>{level.name}</option>)}</select></label>
               <label>Profesora<select name="coach_profile_id" defaultValue=""><option value="">Sin asignar</option>{staff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</select></label>
               <label>Cupos *<input name="capacity" type="number" min="1" defaultValue="12" required /></label>
-              <label>Mensualidad (COP)<input name="monthly_fee" type="number" min="0" step="1000" placeholder="250000" /></label>
+              <div className="auto-rate-note">La tarifa se calculará automáticamente según el programa y la cantidad de días.</div>
               <label>Edad mínima<input name="minimum_age" type="number" min="0" /></label>
               <label>Edad máxima<input name="maximum_age" type="number" min="0" /></label>
             </div>
           </fieldset>
           <fieldset>
-            <legend>Primer horario semanal</legend>
+            <legend>Días y horario semanal</legend>
             <div className="form-grid">
-              <label>Día *<select name="weekday" defaultValue="1"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="7">Domingo</option></select></label>
+              <div className="full-field">
+                <span className="field-label">Días de entrenamiento *</span>
+                <div className="weekday-picker">
+                  {[
+                    [1, "Lunes"], [2, "Martes"], [3, "Miércoles"],
+                    [4, "Jueves"], [5, "Viernes"], [6, "Sábado"], [7, "Domingo"],
+                  ].map(([day, label]) => (
+                    <label key={day}>
+                      <input type="checkbox" name="weekdays" value={day} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
               <label>Sede o espacio<input name="location" placeholder="Sede principal" /></label>
               <label>Hora de inicio *<input name="starts_at" type="time" required /></label>
               <label>Hora de finalización *<input name="ends_at" type="time" required /></label>

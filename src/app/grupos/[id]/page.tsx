@@ -31,7 +31,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
   ] = await Promise.all([
     supabase
       .from("training_groups")
-      .select("id, name, capacity, monthly_fee_cents, levels(name), staff_profiles(full_name), group_schedule_slots(weekday, starts_at, ends_at, location)")
+      .select("id, name, capacity, monthly_fee_cents, billing_program, levels(name), staff_profiles(full_name), group_schedule_slots(weekday, starts_at, ends_at, location)")
       .eq("id", id)
       .single(),
     supabase
@@ -54,6 +54,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     name: string;
     capacity: number;
     monthly_fee_cents: number;
+    billing_program: string | null;
     levels: Array<{ name: string }> | null;
     staff_profiles: Array<{ full_name: string }> | null;
     group_schedule_slots: Array<{
@@ -89,7 +90,8 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
           <h1>{detail.name}</h1>
           <p>
             {detail.staff_profiles?.[0]?.full_name ?? "Sin profesora"} ·{" "}
-            {enrollments.length} de {detail.capacity} cupos ocupados
+            {enrollments.length} de {detail.capacity} cupos ocupados ·{" "}
+            {detail.billing_program ?? "Programa sin definir"}
           </p>
         </div>
         <Link href="/asistencia" className="outline-button">Ir a asistencia</Link>

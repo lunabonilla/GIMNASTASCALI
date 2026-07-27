@@ -741,6 +741,55 @@ th {
   }
 }
 
+.auto-rate-note {
+  align-self: end;
+  border-radius: 12px;
+  color: #674477;
+  background: #f3eafa;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.field-label {
+  display: block;
+  color: #62586a;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.weekday-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.weekday-picker label {
+  cursor: pointer;
+}
+
+.weekday-picker input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.weekday-picker span {
+  display: block;
+  border: 1px solid #ddd2e5;
+  border-radius: 999px;
+  color: #6d6374;
+  background: #fff;
+  padding: 10px 15px;
+  transition: .15s ease;
+}
+
+.weekday-picker input:checked + span {
+  border-color: #62269a;
+  color: #fff;
+  background: #62269a;
+}
+
 .create-product-box {
   background: #fff;
   border: 1px solid #e4dbe9;

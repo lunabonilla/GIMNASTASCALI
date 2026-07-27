@@ -19,11 +19,12 @@ export default async function GroupsPage({
   const { created } = await searchParams;
   const { data, error } = await supabase
     .from("training_groups")
-    .select("id, name, group_type, capacity, monthly_fee_cents, active, levels(name), staff_profiles(full_name), group_schedule_slots(weekday, starts_at, ends_at, location), enrollments(id)")
+    .select("id, name, group_type, billing_program, capacity, monthly_fee_cents, active, levels(name), staff_profiles(full_name), group_schedule_slots(weekday, starts_at, ends_at, location), enrollments(id)")
     .order("name");
 
   const groups = (data ?? []) as Array<{
     id: string; name: string; group_type: "regular" | "integral";
+    billing_program: string | null;
     capacity: number; monthly_fee_cents: number; active: boolean;
     levels: Array<{ name: string }> | null;
     staff_profiles: Array<{ full_name: string }> | null;
@@ -62,7 +63,7 @@ export default async function GroupsPage({
                 <article className="group-card" key={group.id}>
                   <div className="group-card-top">
                     <div>
-                      <span className="section-kicker">{group.group_type === "integral" ? "Integral" : "Regular"}</span>
+                      <span className="section-kicker">{group.billing_program ?? (group.group_type === "integral" ? "Integral" : "Regular")}</span>
                       <h2>{group.name}</h2>
                     </div>
                     <span className="status-chip">{group.active ? "Activo" : "Inactivo"}</span>
