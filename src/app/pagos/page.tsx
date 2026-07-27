@@ -19,11 +19,23 @@ export default async function PaymentsPage({
   if (!auth?.claims) redirect("/login");
 
   const { q = "" } = await searchParams;
-  const { data, error } = await supabase
-    .from("billing_charges")
-    .select("id, gymnast_id, amount_cents, due_on, voided_at, gymnasts(first_name, last_name), payment_allocations(amount_cents)")
-    .is("voided_at", null)
-    .order("due_on");
+  const [
+    { data, error },
+    { count: archivedCount },
+    { count: exceptionCount },
+  ] = await Promise.all([
+    supabase
+      .from("billing_charges")
+      .select("id, gymnast_id, amount_cents, due_on, voided_at, gymnasts(first_name, last_name), payment_allocations(amount_cents)")
+      .is("voided_at", null)
+      .order("due_on"),
+    supabase
+      .from("notion_financial_archive")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("notion_import_exceptions")
+      .select("*", { count: "exact", head: true }),
+  ]);
 
   const charges = (data ?? []) as Array<{
     id: string;
@@ -87,6 +99,15 @@ export default async function PaymentsPage({
       </header>
 
       <section className="module-content">
+        {(archivedCount ?? 0) > 0 && (
+          <div className="notion-import-banner">
+            <div>
+              <strong>Historial de Notion importado</strong>
+              <span>{archivedCount} registros originales conservados · {exceptionCount ?? 0} pendientes de asociación</span>
+            </div>
+            <Link href="/pagos/historial-notion">Consultar archivo →</Link>
+          </div>
+        )}
         <div className="finance-summary">
           <article>
             <span>Cartera pendiente</span>
