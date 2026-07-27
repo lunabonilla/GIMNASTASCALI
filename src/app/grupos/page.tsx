@@ -10,13 +10,13 @@ const dayNames: Record<number, string> = {
 export default async function GroupsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{ created?: string; deleted?: string; archived?: string }>;
 }) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const { created } = await searchParams;
+  const { created, deleted, archived } = await searchParams;
   const { data, error } = await supabase
     .from("training_groups")
     .select("id, name, group_type, billing_program, capacity, monthly_fee_cents, active, levels(name), staff_profiles(full_name), group_schedule_slots(weekday, starts_at, ends_at, location), enrollments(id)")
@@ -46,6 +46,8 @@ export default async function GroupsPage({
 
       <section className="module-content">
         {created && <div className="success-banner">✓ Grupo y horario creados correctamente.</div>}
+        {deleted && <div className="success-banner">✓ Grupo vacío eliminado definitivamente.</div>}
+        {archived && <div className="success-banner">✓ Grupo desactivado; su historial quedó protegido.</div>}
         {error ? (
           <div className="data-panel table-empty">No pudimos cargar los grupos.</div>
         ) : groups.length === 0 ? (

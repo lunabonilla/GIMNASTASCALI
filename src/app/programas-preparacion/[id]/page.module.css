@@ -1,0 +1,22 @@
+.roll { overflow: hidden; margin-bottom: 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+.rollHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); background: #faf9fb; padding: 18px 20px; }
+.rollHeading span { display: block; margin-bottom: 5px; color: #958d99; font-size: 9px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.rollHeading h2 { margin: 0; font-size: 18px; }
+.rollHeading > button { min-height: 42px; border: 0; border-radius: 11px; color: #fff; background: var(--purple); font-size: 11px; font-weight: 850; padding: 0 16px; }
+.rollList { display: flex; flex-direction: column; }
+.rollRow { display: grid; grid-template-columns: minmax(210px, 1fr) minmax(370px, 1.4fr); align-items: center; gap: 16px; border-bottom: 1px solid #eeeaf1; padding: 13px 18px; }
+.rollRow:last-child { border-bottom: 0; }
+.person { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.person > span { display: grid; width: 29px; height: 29px; flex: 0 0 auto; place-items: center; border-radius: 8px; color: #746b79; background: #f0ecf2; font-size: 10px; font-weight: 800; }
+.person strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.statusOptions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.statusButton { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 6px; border: 1px solid #e4dfe7; border-radius: 10px; color: #7e7582; background: #fff; font-size: 9px; font-weight: 800; }
+.statusButton > span { font-size: 14px; font-weight: 900; }
+.statusButton.selected.attended { border-color: #a9d9bd; color: #276d4f; background: #e4f4eb; }
+.statusButton.selected.absent { border-color: #e8b4b4; color: #994141; background: #fae7e7; }
+.statusButton.selected.double_class { border-color: #b4d0ea; color: #386e99; background: #e5f0fa; }
+@media (max-width: 720px) {
+  .rollRow { grid-template-columns: 1fr; gap: 10px; padding: 13px; }
+  .statusButton { min-height: 52px; flex-direction: column; gap: 2px; }
+  .rollHeading { position: sticky; top: 0; z-index: 2; }
+}

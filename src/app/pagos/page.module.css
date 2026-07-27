@@ -1,18 +1,27 @@
 .financeRow {
   display: grid;
   grid-template-columns:
-    minmax(145px, 1.15fr)
-    minmax(90px, 0.65fr)
-    minmax(270px, 1.75fr)
-    minmax(100px, 0.72fr)
-    minmax(105px, 0.78fr)
-    minmax(115px, 0.8fr);
+    minmax(180px, 1fr)
+    minmax(290px, 1.55fr)
+    minmax(190px, 0.95fr)
+    minmax(130px, 0.7fr);
   align-items: center;
   gap: 16px;
   border-top: 1px solid #eee8f1;
   color: #403647;
   padding: 17px 22px;
   text-decoration: none;
+}
+
+.accountName {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.accountName > strong {
+  font-size: 13px;
 }
 
 a.financeRow:hover {
@@ -90,8 +99,84 @@ a.financeRow:hover {
   font-weight: 800;
 }
 
+.cycle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 5px 8px;
+}
+
+.cycle small {
+  color: #958d99;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.cycle strong {
+  font-size: 10px;
+}
+
+.balance {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+}
+
+.balance > strong {
+  font-size: 15px;
+}
+
+.balance > small {
+  color: var(--purple);
+  font-size: 9px;
+  font-weight: 800;
+}
+
 @media (max-width: 1050px) {
   .financeRow {
-    min-width: 1050px;
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    margin: 10px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .financeRow:first-child {
+    display: none;
+  }
+
+  .debtList {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .cycle {
+    grid-column: 1;
+  }
+
+  .balance {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 560px) {
+  .financeRow {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .debtList,
+  .cycle,
+  .balance {
+    grid-column: 1;
+  }
+
+  .balance {
+    align-items: flex-start;
+    text-align: left;
   }
 }

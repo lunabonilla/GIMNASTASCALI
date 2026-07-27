@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createPreparationProgram } from "./actions";
+import styles from "./page.module.css";
 
 const money = (cents: number | null) =>
   cents === null
@@ -53,7 +54,7 @@ export default async function PreparationProgramsPage({
           <p>Organiza planes adicionales, concentraciones y preparación para eventos.</p>
         </div>
       </header>
-      <section className="module-content preparation-layout">
+      <section className={`module-content ${styles.layout}`}>
         <div>
           {messages.created && <div className="success-banner">✓ Programa creado correctamente.</div>}
           {messages.error && <div className="error-banner">{messages.error}</div>}
@@ -65,21 +66,18 @@ export default async function PreparationProgramsPage({
               <p>Crea el primero usando el formulario.</p>
             </div>
           ) : (
-            <div className="preparation-list">
+            <div className={styles.database}>
+              <div className={styles.head}><span>Programa</span><span>Estado</span><span>Fechas</span><span>Valor</span><span>Inscritas</span></div>
               {programs.map((program) => (
-                <Link href={`/programas-preparacion/${program.id}`} className="preparation-card" key={program.id}>
-                  <div>
-                    <span className={`preparation-status ${program.status}`}>{statusLabels[program.status]}</span>
-                    <h2>{program.name}</h2>
-                    <p>{program.description || "Sin descripción"}</p>
+                <Link href={`/programas-preparacion/${program.id}`} className={styles.row} key={program.id}>
+                  <div className={styles.name}>
+                    <span>★</span>
+                    <div><strong>{program.name}</strong><small>{program.description || "Sin descripción"} · {program.coach_name || "Profesora por asignar"}</small></div>
                   </div>
-                  <dl>
-                    <div><dt>Profesora</dt><dd>{program.coach_name || "Por asignar"}</dd></div>
-                    <div><dt>Fechas</dt><dd>{program.starts_on || "Por definir"} → {program.ends_on || "Por definir"}</dd></div>
-                    <div><dt>Valor base</dt><dd>{money(program.base_price_cents)}</dd></div>
-                    <div><dt>Inscritas</dt><dd>{program.preparation_program_enrollments?.[0]?.count ?? 0}</dd></div>
-                  </dl>
-                  <span className="preparation-open">Abrir lista y asistencia →</span>
+                  <div data-label="Estado"><span className={`${styles.status} ${styles[program.status]}`}>{statusLabels[program.status]}</span></div>
+                  <div data-label="Fechas"><strong>{program.starts_on || "Por definir"}</strong><small>hasta {program.ends_on || "Por definir"}</small></div>
+                  <div data-label="Valor"><strong>{money(program.base_price_cents)}</strong></div>
+                  <div data-label="Inscritas"><span className={styles.participants}>👤 {program.preparation_program_enrollments?.[0]?.count ?? 0}</span></div>
                 </Link>
               ))}
             </div>

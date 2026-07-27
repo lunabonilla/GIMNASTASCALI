@@ -16,34 +16,65 @@ const statusLabels: Record<string, string> = {
   completed: "Realizada",
 };
 
-export default async function CompetitionsPage() {
+export default async function CompetitionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
   const { data, error } = await supabase.from("competitions")
     .select("*").order("starts_on", { nullsFirst: false });
   const competitions = data ?? [];
+  const { view = "upcoming" } = await searchParams;
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = competitions.filter((item) => !item.ends_on || item.ends_on >= today);
   const past = competitions.filter((item) => item.ends_on && item.ends_on < today);
+  const visible = view === "confirmed"
+    ? upcoming.filter((item) => item.status === "confirmed")
+    : view === "defining"
+      ? upcoming.filter((item) => item.status === "defining")
+      : view === "past"
+        ? past
+        : upcoming;
 
-  const renderCards = (items: typeof competitions) => (
-    <div className={styles.grid}>
+  const renderRows = (items: typeof competitions) => (
+    <div className={styles.database}>
+      <div className={styles.tableHead}>
+        <span>Competencia</span>
+        <span>Estado</span>
+        <span>Fecha</span>
+        <span>Sede</span>
+        <span>Inscripción</span>
+        <span>Costo</span>
+      </div>
       {items.map((competition) => (
-        <article className={styles.card} key={competition.id}>
-          <div className={styles.cardTop}>
-            <span className={`${styles.status} ${styles[competition.status]}`}>{statusLabels[competition.status]}</span>
-            <strong>{competition.year || "Año pendiente"}</strong>
+        <article className={styles.tableRow} key={competition.id}>
+          <div className={styles.nameCell}>
+            <span className={styles.pageIcon}>🏆</span>
+            <div>
+              <strong>{competition.name}</strong>
+              <small>{competition.year || "Año por definir"} · {competition.source_name || "Registro interno"}</small>
+            </div>
           </div>
-          <h2>{competition.name}</h2>
-          <p className={styles.place}>⌖ {[competition.city, competition.country].filter(Boolean).join(", ") || competition.venue || "Lugar por definir"}</p>
-          <dl>
-            <div><dt>Fecha</dt><dd>{date(competition.starts_on)}{competition.ends_on && competition.ends_on !== competition.starts_on ? ` → ${date(competition.ends_on)}` : ""}</dd></div>
-            <div><dt>Inscripción</dt><dd>{date(competition.registration_deadline_1)}</dd></div>
-            <div><dt>Costo</dt><dd>{competition.estimated_cost_cents === null ? "Pendiente por confirmar" : new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(competition.estimated_cost_cents / 100)}</dd></div>
-          </dl>
-          {competition.notes && <p className={styles.note}>{competition.notes}</p>}
-          <small className={styles.source}>Fuente: {competition.source_name || "Registro interno"}</small>
+          <div data-label="Estado"><span className={`${styles.status} ${styles[competition.status]}`}>{statusLabels[competition.status]}</span></div>
+          <div data-label="Fecha" className={styles.dateCell}>
+            <strong>{date(competition.starts_on)}</strong>
+            {competition.ends_on && competition.ends_on !== competition.starts_on && <small>hasta {date(competition.ends_on)}</small>}
+          </div>
+          <div data-label="Sede">
+            <strong>{[competition.city, competition.country].filter(Boolean).join(", ") || "Por definir"}</strong>
+            {competition.venue && <small>{competition.venue}</small>}
+          </div>
+          <div data-label="Inscripción" className={styles.dateCell}>
+            <strong>{date(competition.registration_deadline_1)}</strong>
+            {competition.registration_deadline_2 && <small>2.º plazo: {date(competition.registration_deadline_2)}</small>}
+          </div>
+          <div data-label="Costo">
+            <strong>{competition.estimated_cost_cents === null ? "Por confirmar" : new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(competition.estimated_cost_cents / 100)}</strong>
+          </div>
+          {competition.notes && <p className={styles.rowNote}>{competition.notes}</p>}
         </article>
       ))}
     </div>
@@ -62,9 +93,20 @@ export default async function CompetitionsPage() {
       <section className={styles.content}>
         {error ? <div className="error-banner">No pudimos cargar las competencias.</div> : (
           <>
-            <div className={styles.sectionHeading}><div><span>Próximas</span><h2>{upcoming.length} competencias y eventos</h2></div></div>
-            {renderCards(upcoming)}
-            {past.length > 0 && <><div className={`${styles.sectionHeading} ${styles.pastHeading}`}><div><span>Histórico</span><h2>Eventos anteriores</h2></div></div>{renderCards(past)}</>}
+            <nav className={styles.views} aria-label="Vistas de competencias">
+              {[
+                ["upcoming", "📅 Próximas", upcoming.length],
+                ["confirmed", "✅ Confirmadas", upcoming.filter((item) => item.status === "confirmed").length],
+                ["defining", "🟡 En definición", upcoming.filter((item) => item.status === "defining").length],
+                ["past", "🗂 Histórico", past.length],
+              ].map(([key, label, count]) => (
+                <Link className={view === key ? styles.activeView : ""} href={`/competencias?view=${key}`} key={String(key)}>
+                  {label} <span>{count}</span>
+                </Link>
+              ))}
+            </nav>
+            <div className={styles.sectionHeading}><div><span>Vista actual</span><h2>{visible.length} competencias y eventos</h2></div></div>
+            {renderRows(visible)}
           </>
         )}
       </section>

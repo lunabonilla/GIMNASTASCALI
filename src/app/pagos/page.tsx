@@ -138,7 +138,6 @@ export default async function PaymentsPage({
     0,
   );
   const overdueTotal = allRows.reduce((total, account) => total + account.overdue, 0);
-  const chargedTotal = allRows.reduce((total, account) => total + account.charged, 0);
   const paidTotal = allRows.reduce((total, account) => total + account.paid, 0);
   return (
     <main className="module-page">
@@ -169,29 +168,19 @@ export default async function PaymentsPage({
         )}
         <div className="finance-summary">
           <article>
-            <span>Histórico cobrado</span>
-            <strong>{money(chargedTotal)}</strong>
-            <small>Suma de todos los cargos importados y nuevos</small>
-          </article>
-          <article>
-            <span>Histórico abonado</span>
-            <strong>{money(paidTotal)}</strong>
-            <small>Pagos aplicados a esos cargos</small>
-          </article>
-          <article>
-            <span>Cartera pendiente</span>
+            <span>Total por cobrar</span>
             <strong>{money(pendingTotal)}</strong>
-            <small>Saldo total por recaudar</small>
+            <small>Todos los saldos pendientes</small>
           </article>
           <article className="overdue">
-            <span>Cartera vencida</span>
+            <span>Ya se venció</span>
             <strong>{money(overdueTotal)}</strong>
-            <small>Cargos que pasaron su fecha límite</small>
+            <small>Requiere gestión de cobro</small>
           </article>
           <article>
-            <span>Deportistas con cobros</span>
-            <strong>{rows.length}</strong>
-            <small>Estados de cuenta creados</small>
+            <span>Total recibido</span>
+            <strong>{money(paidTotal)}</strong>
+            <small>Abonos y pagos registrados</small>
           </article>
         </div>
 
@@ -229,19 +218,21 @@ export default async function PaymentsPage({
         ) : (
           <div className="data-panel">
             <div className="data-panel-heading">
-              <div><span className="section-kicker">Estados de cuenta</span><h2>{rows.length} deportistas</h2></div>
+              <div><span className="section-kicker">Vista resumida</span><h2>{rows.length} estados de cuenta</h2></div>
             </div>
             <div className="finance-table">
               <div className={`${styles.financeRow} finance-head`}>
-                <span>Deportista</span><span>Estado</span><span>Qué debe</span><span>Inicio</span><span>Vencimiento</span><span>Saldo total</span>
+                <span>Deportista y estado</span><span>Qué debe</span><span>Ciclo</span><span>Saldo total</span>
               </div>
               {rows.map((account) => {
                 const balance = account.charged - account.paid;
                 return (
                   <Link href={`/pagos/${account.id}`} className={styles.financeRow} key={account.id}>
-                    <strong>{account.name}</strong>
-                    <span className={`finance-status ${balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending"}`}>
-                      {balance === 0 ? "Al día" : account.overdue > 0 ? "Vencido" : "Pendiente"}
+                    <span className={styles.accountName}>
+                      <strong>{account.name}</strong>
+                      <span className={`finance-status ${balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending"}`}>
+                        {balance === 0 ? "Al día" : account.overdue > 0 ? "Vencido" : "Pendiente"}
+                      </span>
                     </span>
                     <span className={styles.debtList}>
                       {account.debts.length === 0 ? (
@@ -263,9 +254,13 @@ export default async function PaymentsPage({
                         </>
                       )}
                     </span>
-                    <span>{account.cycleStart ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.cycleStart)) : "—"}</span>
-                    <strong>{account.nextDue ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.nextDue)) : "Sin deuda"}</strong>
-                    <strong>{money(balance)}</strong>
+                    <span className={styles.cycle}>
+                      <small>Inició</small>
+                      <strong>{account.cycleStart ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.cycleStart)) : "Sin registrar"}</strong>
+                      <small>Vence</small>
+                      <strong>{account.nextDue ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.nextDue)) : "Sin deuda"}</strong>
+                    </span>
+                    <span className={styles.balance}><strong>{money(balance)}</strong><small>Ver movimientos →</small></span>
                   </Link>
                 );
               })}

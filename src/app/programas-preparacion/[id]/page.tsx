@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { enrollGymnast, savePreparationAttendance } from "./actions";
+import { enrollGymnast } from "./actions";
+import { PreparationAttendanceForm } from "./preparation-attendance-form";
 
 const statusLabel: Record<string, string> = {
   attended: "✅ Asistió",
@@ -103,24 +104,16 @@ export default async function PreparationProgramPage({
           <div className="data-panel table-empty"><span>★</span><h3>La lista está vacía</h3><p>Agrega las niñas que participarán en esta preparación.</p></div>
         ) : (
           <>
-            <form action={savePreparationAttendance} className="preparation-roll">
-              <input type="hidden" name="program_id" value={id} />
-              <input type="hidden" name="session_on" value={selectedDate} />
-              <div className="preparation-roll-heading">
-                <div><span className="section-kicker">Tomar asistencia</span><h2>{selectedDate}</h2></div>
-                <button className="primary-button">Guardar asistencia</button>
-              </div>
-              {participants.map((gymnast) => (
-                <label className="preparation-roll-row" key={gymnast.id}>
-                  <strong>{gymnast.first_name} {gymnast.last_name}</strong>
-                  <select name={`status:${gymnast.id}`} defaultValue={currentStatuses.get(gymnast.id) || "attended"}>
-                    <option value="attended">✅ Asistió</option>
-                    <option value="absent">❌ No asistió</option>
-                    <option value="double_class">🔁 Clase doble</option>
-                  </select>
-                </label>
-              ))}
-            </form>
+            <PreparationAttendanceForm
+              programId={id}
+              sessionOn={selectedDate}
+              participants={participants.map((gymnast) => ({
+                id: gymnast.id,
+                name: `${gymnast.first_name} ${gymnast.last_name}`,
+                status: (currentStatuses.get(gymnast.id) || "attended") as
+                  "attended" | "absent" | "double_class",
+              }))}
+            />
 
             {sessions.length > 0 && (
               <div className="data-panel preparation-matrix-wrap">

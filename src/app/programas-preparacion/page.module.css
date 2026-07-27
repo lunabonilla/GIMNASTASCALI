@@ -1,0 +1,28 @@
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, 350px); align-items: start; gap: 22px; }
+.database { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+.head, .row { display: grid; grid-template-columns: minmax(220px, 1.5fr) 110px 150px 130px 95px; align-items: center; gap: 14px; }
+.head { color: #8c838f; background: #faf9fb; font-size: 10px; font-weight: 850; letter-spacing: .06em; padding: 13px 18px; text-transform: uppercase; }
+.row { min-height: 76px; border-top: 1px solid #ece8ef; color: inherit; padding: 14px 18px; text-decoration: none; }
+.row:hover { background: #fcfafd; }
+.name { display: flex; min-width: 0; align-items: center; gap: 11px; }
+.name > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 9px; color: #6c4590; background: #eee4f5; }
+.name strong, .name small, .row div > strong, .row div > small { display: block; }
+.name strong { font-size: 13px; }
+.name small, .row div > small { overflow: hidden; margin-top: 4px; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.row div > strong { font-size: 11px; }
+.status { display: inline-flex; border-radius: 999px; color: #7d6f39; background: #f5edc8; font-size: 9px; font-weight: 850; padding: 6px 9px; }
+.open { color: #35658e; background: #dcecff; }
+.active { color: #347154; background: #dceee4; }
+.finished { color: #704889; background: #eadcf5; }
+.cancelled { color: #9c4b4b; background: #f7dddd; }
+.participants { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; }
+@media (max-width: 1050px) {
+  .layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .head { display: none; }
+  .database { border: 0; background: transparent; }
+  .row { grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+  .name { grid-column: 1 / -1; }
+  .row > div:not(.name)::before { display: block; margin-bottom: 4px; color: #99919c; content: attr(data-label); font-size: 8px; font-weight: 850; text-transform: uppercase; }
+}

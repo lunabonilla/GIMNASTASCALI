@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { endEnrollment, enrollGymnast } from "../actions";
+import { deleteGroup, endEnrollment, enrollGymnast } from "../actions";
 
 const dayNames: Record<number, string> = {
   1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves",
@@ -14,6 +14,7 @@ type PageProps = {
     error?: string;
     assigned?: string;
     removed?: string;
+    updated?: string;
   }>;
 };
 
@@ -95,13 +96,17 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
             {detail.billing_program ?? "Programa sin definir"}
           </p>
         </div>
-        <Link href="/asistencia" className="outline-button">Ir a asistencia</Link>
+        <div className="header-actions">
+          <Link href={`/grupos/${detail.id}/editar`} className="outline-button">Editar grupo</Link>
+          <Link href="/asistencia" className="outline-button">Ir a asistencia</Link>
+        </div>
       </header>
 
       <section className="module-content">
         {messages.error && <div className="error-banner">{messages.error}</div>}
         {messages.assigned && <div className="success-banner">✓ Gimnasta asignada al grupo.</div>}
         {messages.removed && <div className="success-banner">✓ Gimnasta retirada; conservamos su historial.</div>}
+        {messages.updated && <div className="success-banner">✓ Grupo y horario actualizados.</div>}
 
         <div className="group-detail-grid">
           <section className="data-panel">
@@ -180,6 +185,18 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
             </section>
           </aside>
         </div>
+
+        <section className="danger-zone">
+          <div>
+            <span className="section-kicker">Administración del grupo</span>
+            <h2>Eliminar o retirar este grupo</h2>
+            <p>Si ya tiene historial, se desactivará para conservar las asistencias y asignaciones.</p>
+          </div>
+          <form action={deleteGroup}>
+            <input type="hidden" name="group_id" value={detail.id} />
+            <button type="submit">Eliminar grupo</button>
+          </form>
+        </section>
       </section>
     </main>
   );
