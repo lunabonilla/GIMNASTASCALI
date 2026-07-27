@@ -887,6 +887,110 @@ th {
   }
 }
 
+.trial-list {
+  display: grid;
+  gap: 12px;
+}
+
+.trial-card {
+  display: grid;
+  grid-template-columns: 90px 1fr auto minmax(220px, auto);
+  align-items: center;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--white);
+  padding: 17px 20px;
+}
+
+.trial-date {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  border-right: 1px solid var(--line);
+}
+
+.trial-date strong {
+  font-size: 25px;
+}
+
+.trial-date span {
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.trial-date small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
+.trial-person h2,
+.trial-person p {
+  margin: 0;
+}
+
+.trial-person h2 {
+  font-size: 16px;
+}
+
+.trial-person p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.trial-status {
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--purple);
+  background: var(--purple-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.trial-status.attended {
+  color: #23704d;
+  background: #eaf8f1;
+}
+
+.trial-status.no_show,
+.trial-status.cancelled {
+  color: #8a5151;
+  background: #faeded;
+}
+
+.trial-card form {
+  display: flex;
+  gap: 7px;
+}
+
+.trial-card select,
+.trial-card button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+  padding: 0 9px;
+}
+
+.trial-card button {
+  color: var(--purple);
+  font-weight: 750;
+}
+
+@media (max-width: 850px) {
+  .trial-card {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .trial-card form,
+  .trial-card > .trial-status {
+    grid-column: 2;
+  }
+}
+
 button,
 a {
   font: inherit;

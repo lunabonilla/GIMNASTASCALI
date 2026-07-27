@@ -11,7 +11,7 @@ type StaffProfile = {
 
 const navigation = [
   { label: "Inicio", icon: "⌂", active: true, href: "/" },
-  { label: "Clases de prueba", icon: "◇" },
+  { label: "Clases de prueba", icon: "◇", href: "/pruebas" },
   { label: "Gimnastas", icon: "○", href: "/gimnastas" },
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓", href: "/asistencia" },
@@ -26,7 +26,7 @@ const modules = [
     description: "Registra una nueva familia y programa su primera visita.",
     action: "Nueva prueba",
     icon: "◇",
-    href: "#",
+    href: "/pruebas/nueva",
   },
   {
     title: "Crear grupo",
@@ -205,9 +205,9 @@ export default async function Home() {
               ♢
               <span />
             </button>
-            <button className="primary-button">
+            <Link href="/pruebas/nueva" className="primary-button">
               <span>＋</span> Nueva clase de prueba
-            </button>
+            </Link>
           </div>
         </header>
 
