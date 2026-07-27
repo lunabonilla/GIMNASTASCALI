@@ -55,18 +55,26 @@ export async function updateGymnast(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("update_gymnast_profile", {
-    p_gymnast_id: gymnastId,
-    p_first_name: firstName,
-    p_last_name: lastName,
-    p_birth_date: birthDate || null,
-    p_identity_document: value("identity_document"),
-    p_level_id: value("level_id") || null,
-    p_guardian_name: value("guardian_name"),
-    p_guardian_phone: value("guardian_phone"),
-    p_guardian_relationship: value("guardian_relationship"),
-    p_guardian_email: value("guardian_email"),
-  });
+  const { data: staff } = await supabase
+    .from("staff_profiles")
+    .select("role, active")
+    .single();
+  if (!staff?.active || staff.role !== "superadmin") {
+    redirect(`/gimnastas/${gymnastId}?error=No+tienes+permiso+para+editar`);
+  }
+
+  const { error } = await supabase
+    .from("gymnasts")
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+      birth_date: birthDate || null,
+      identity_document: value("identity_document") || null,
+      level_id: value("level_id") || null,
+      status: value("status") || "active",
+      experience_notes: value("experience_notes") || null,
+    })
+    .eq("id", gymnastId);
 
   if (error) {
     const message =
@@ -75,6 +83,69 @@ export async function updateGymnast(formData: FormData) {
         : "No pudimos actualizar la información";
     redirect(`/gimnastas/${gymnastId}?error=${encodeURIComponent(message)}`);
   }
+
+  const { error: privateError } = await supabase
+    .from("gymnast_private_details")
+    .upsert({
+      gymnast_id: gymnastId,
+      address: value("address") || null,
+      health_provider: value("health_provider") || null,
+      allergies_conditions: value("allergies_conditions") || null,
+      emergency_contact_name: value("emergency_contact_name") || null,
+      emergency_contact_phone: value("emergency_contact_phone") || null,
+      medical_notes: value("medical_notes") || null,
+    });
+  if (privateError) {
+    redirect(`/gimnastas/${gymnastId}?error=No+pudimos+guardar+los+datos+de+salud`);
+  }
+
+  const { data: guardianLink } = await supabase
+    .from("gymnast_guardians")
+    .select("guardian_id")
+    .eq("gymnast_id", gymnastId)
+    .eq("is_primary", true)
+    .maybeSingle();
+  const guardianData = {
+    full_name: value("guardian_name") || "Responsable por completar",
+    identity_document: value("guardian_identity_document") || null,
+    phone: value("guardian_phone") || "Por completar",
+    alternate_phone: value("guardian_alternate_phone") || null,
+    relationship: value("guardian_relationship") || null,
+    email: value("guardian_email") || null,
+    notes: value("guardian_notes") || null,
+  };
+  if (guardianLink?.guardian_id) {
+    await supabase.from("guardians").update(guardianData).eq("id", guardianLink.guardian_id);
+  } else if (value("guardian_name") || value("guardian_phone")) {
+    const { data: guardian } = await supabase
+      .from("guardians")
+      .insert(guardianData)
+      .select("id")
+      .single();
+    if (guardian) {
+      await supabase.from("gymnast_guardians").insert({
+        gymnast_id: gymnastId,
+        guardian_id: guardian.id,
+        is_primary: true,
+      });
+    }
+  }
+
+  const customCycleAmount = Number(
+    value("custom_cycle_amount").replace(/[^\d]/g, ""),
+  );
+  await supabase.from("gymnast_billing_profiles").upsert({
+    gymnast_id: gymnastId,
+    program: value("billing_program") || null,
+    days_per_week: value("days_per_week")
+      ? Number(value("days_per_week"))
+      : null,
+    custom_cycle_amount_cents:
+      Number.isFinite(customCycleAmount) && customCycleAmount > 0
+        ? customCycleAmount * 100
+        : null,
+    pricing_notes: value("pricing_notes") || null,
+  });
 
   revalidatePath("/");
   revalidatePath("/gimnastas");

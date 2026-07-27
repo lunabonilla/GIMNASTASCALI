@@ -30,7 +30,7 @@ export default async function GymnastsPage({
   } = await searchParams;
   let query = supabase
     .from("gymnasts")
-    .select("id, first_name, last_name, birth_date, identity_document, status, levels(name), gymnast_guardians(guardian_id)")
+    .select("id, first_name, last_name, birth_date, identity_document, status, levels(name), gymnast_guardians(guardian_id), gymnast_billing_profiles(program, days_per_week), enrollments(active, training_groups(name, group_schedule_slots(weekday)))")
     .order("first_name");
 
   if (q.trim()) {
@@ -64,7 +64,21 @@ export default async function GymnastsPage({
     status: "active" | "suspended" | "retired";
     levels: Array<{ name: string }> | null;
     gymnast_guardians: Array<{ guardian_id: string }>;
+    gymnast_billing_profiles:
+      | { program: string | null; days_per_week: number | null }
+      | Array<{ program: string | null; days_per_week: number | null }>
+      | null;
+    enrollments: Array<{
+      active: boolean;
+      training_groups:
+        | { name: string; group_schedule_slots: Array<{ weekday: number }> }
+        | Array<{ name: string; group_schedule_slots: Array<{ weekday: number }> }>
+        | null;
+    }>;
   }>;
+  const dayLabels: Record<number, string> = {
+    1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom",
+  };
 
   return (
     <main className="module-page">
@@ -150,31 +164,39 @@ export default async function GymnastsPage({
                 <thead>
                   <tr>
                     <th>Gimnasta</th>
-                    <th>Documento</th>
-                    <th>Fecha de nacimiento</th>
+                    <th>Programa</th>
                     <th>Nivel</th>
+                    <th>Grupo y días</th>
                     <th>Estado deportivo</th>
                     <th>Información</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {gymnasts.map((gymnast) => (
+                  {gymnasts.map((gymnast) => {
+                    const billing = Array.isArray(gymnast.gymnast_billing_profiles)
+                      ? gymnast.gymnast_billing_profiles[0]
+                      : gymnast.gymnast_billing_profiles;
+                    const enrollment = gymnast.enrollments.find((item) => item.active);
+                    const group = Array.isArray(enrollment?.training_groups)
+                      ? enrollment?.training_groups[0]
+                      : enrollment?.training_groups;
+                    const days = (group?.group_schedule_slots ?? [])
+                      .map((slot) => dayLabels[slot.weekday])
+                      .join(", ");
+                    return (
                     <tr key={gymnast.id}>
                       <td>
                         <Link href={`/gimnastas/${gymnast.id}`} className="row-link">
                           {gymnast.first_name} {gymnast.last_name}
                         </Link>
+                        <small className="table-secondary">{gymnast.identity_document || "Documento pendiente"}</small>
                       </td>
-                      <td>{gymnast.identity_document || "Sin registrar"}</td>
-                      <td>
-                        {gymnast.birth_date
-                          ? new Intl.DateTimeFormat("es-CO", {
-                              dateStyle: "medium",
-                              timeZone: "UTC",
-                            }).format(new Date(gymnast.birth_date))
-                          : "Sin registrar"}
-                      </td>
+                      <td><span className="notion-tag blue">{billing?.program || "Sin programa"}</span></td>
                       <td>{gymnast.levels?.[0]?.name || "Sin asignar"}</td>
+                      <td>
+                        <strong className="table-group-name">{group?.name || "Sin grupo"}</strong>
+                        <small className="table-secondary">{days || "Días pendientes"}</small>
+                      </td>
                       <td>
                         <span className={`sport-status ${gymnast.status}`}>
                           {gymnast.status === "active"
@@ -192,7 +214,7 @@ export default async function GymnastsPage({
                         )}
                       </td>
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             </div>

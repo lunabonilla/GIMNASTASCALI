@@ -12,13 +12,13 @@ const money = (cents: number) =>
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; view?: string }>;
 }) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const { q = "" } = await searchParams;
+  const { q = "", view = "collect" } = await searchParams;
   const [
     { data, error },
     { count: archivedCount },
@@ -26,7 +26,7 @@ export default async function PaymentsPage({
   ] = await Promise.all([
     supabase
       .from("billing_charges")
-      .select("id, gymnast_id, amount_cents, due_on, voided_at, gymnasts(first_name, last_name), payment_allocations(amount_cents)")
+      .select("id, gymnast_id, amount_cents, due_on, period_starts_on, voided_at, gymnasts(first_name, last_name, status), payment_allocations(amount_cents)")
       .is("voided_at", null)
       .order("due_on"),
     supabase
@@ -43,9 +43,10 @@ export default async function PaymentsPage({
     amount_cents: number;
     due_on: string;
     gymnasts:
-      | { first_name: string; last_name: string }
-      | Array<{ first_name: string; last_name: string }>
+      | { first_name: string; last_name: string; status: string }
+      | Array<{ first_name: string; last_name: string; status: string }>
       | null;
+    period_starts_on: string | null;
     payment_allocations: Array<{ amount_cents: number }>;
   }>;
 
@@ -55,6 +56,9 @@ export default async function PaymentsPage({
     charged: number;
     paid: number;
     overdue: number;
+    status: string;
+    nextDue: string | null;
+    cycleStart: string | null;
   }>();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -73,26 +77,46 @@ export default async function PaymentsPage({
       charged: 0,
       paid: 0,
       overdue: 0,
+      status: gymnast?.status ?? "active",
+      nextDue: null,
+      cycleStart: null,
     };
     current.charged += Number(charge.amount_cents);
     current.paid += paid;
     if (charge.due_on < today) {
       current.overdue += Math.max(0, Number(charge.amount_cents) - paid);
     }
+    if (Number(charge.amount_cents) - paid > 0) {
+      if (!current.nextDue || charge.due_on < current.nextDue) {
+        current.nextDue = charge.due_on;
+        current.cycleStart = charge.period_starts_on;
+      }
+    }
     accounts.set(charge.gymnast_id, current);
   }
 
   const normalizedQuery = q.trim().toLocaleLowerCase("es");
-  const rows = [...accounts.values()]
+  const allRows = [...accounts.values()];
+  const rows = allRows
     .filter((account) => account.name.toLocaleLowerCase("es").includes(normalizedQuery))
+    .filter((account) => {
+      const balance = account.charged - account.paid;
+      if (view === "overdue") return account.overdue > 0;
+      if (view === "paid") return balance === 0;
+      if (view === "future") return balance > 0 && Boolean(account.nextDue && account.nextDue >= today);
+      if (view === "active") return account.status === "active";
+      if (view === "paused") return account.status === "suspended";
+      if (view === "all") return true;
+      return balance > 0;
+    })
     .sort((a, b) => (b.charged - b.paid) - (a.charged - a.paid));
-  const pendingTotal = rows.reduce(
+  const pendingTotal = allRows.reduce(
     (total, account) => total + account.charged - account.paid,
     0,
   );
-  const overdueTotal = rows.reduce((total, account) => total + account.overdue, 0);
-  const chargedTotal = rows.reduce((total, account) => total + account.charged, 0);
-  const paidTotal = rows.reduce((total, account) => total + account.paid, 0);
+  const overdueTotal = allRows.reduce((total, account) => total + account.overdue, 0);
+  const chargedTotal = allRows.reduce((total, account) => total + account.charged, 0);
+  const paidTotal = allRows.reduce((total, account) => total + account.paid, 0);
 
   return (
     <main className="module-page">
@@ -150,8 +174,25 @@ export default async function PaymentsPage({
 
         <form className="search-form" method="get">
           <input name="q" defaultValue={q} placeholder="Buscar por nombre de la deportista" />
+          <input type="hidden" name="view" value={view} />
           <button type="submit">Buscar</button>
         </form>
+
+        <nav className="payment-views" aria-label="Vistas de cartera">
+          {[
+            ["collect", "Por cobrar"],
+            ["overdue", "Vencidas"],
+            ["paid", "Al día"],
+            ["future", "Ciclos futuros"],
+            ["active", "Activas"],
+            ["paused", "Pausadas"],
+            ["all", "Todas"],
+          ].map(([key, label]) => (
+            <Link className={view === key ? "active" : ""} href={`/pagos?view=${key}`} key={key}>
+              {label}
+            </Link>
+          ))}
+        </nav>
 
         {error ? (
           <div className="data-panel table-empty">No pudimos cargar la cartera.</div>
@@ -169,19 +210,19 @@ export default async function PaymentsPage({
             </div>
             <div className="finance-table">
               <div className="finance-row finance-head">
-                <span>Deportista</span><span>Total cobrado</span><span>Abonado</span><span>Saldo</span><span>Estado</span>
+                <span>Deportista</span><span>Estado</span><span>Inicio del ciclo</span><span>Vencimiento</span><span>Saldo</span>
               </div>
               {rows.map((account) => {
                 const balance = account.charged - account.paid;
                 return (
                   <Link href={`/pagos/${account.id}`} className="finance-row" key={account.id}>
                     <strong>{account.name}</strong>
-                    <span>{money(account.charged)}</span>
-                    <span>{money(account.paid)}</span>
-                    <strong>{money(balance)}</strong>
                     <span className={`finance-status ${balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending"}`}>
                       {balance === 0 ? "Al día" : account.overdue > 0 ? "Vencido" : "Pendiente"}
                     </span>
+                    <span>{account.cycleStart ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.cycleStart)) : "—"}</span>
+                    <strong>{account.nextDue ? new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(account.nextDue)) : "Sin deuda"}</strong>
+                    <strong>{money(balance)}</strong>
                   </Link>
                 );
               })}

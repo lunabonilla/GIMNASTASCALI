@@ -40,6 +40,15 @@ export async function saveBillingFrequency(formData: FormData) {
     redirect(`${returnUrl}?error=${encodeURIComponent("No encontramos la tarifa configurada")}`);
   }
 
+  const { data: currentProfile } = await supabase
+    .from("gymnast_billing_profiles")
+    .select("custom_cycle_amount_cents")
+    .eq("gymnast_id", gymnastId)
+    .maybeSingle();
+  const cycleAmount = Number(
+    currentProfile?.custom_cycle_amount_cents ?? rate.amount_cents,
+  );
+
   const { error: profileError } = await supabase
     .from("gymnast_billing_profiles")
     .upsert({
@@ -65,7 +74,7 @@ export async function saveBillingFrequency(formData: FormData) {
       await supabase
         .from("billing_charges")
         .update({
-          amount_cents: rate.amount_cents,
+          amount_cents: cycleAmount,
           concept: `Ciclo ${cycleStart} a ${cycleEnd}`,
           due_on: cycleEnd,
           period_starts_on: cycleStart,
@@ -84,7 +93,7 @@ export async function saveBillingFrequency(formData: FormData) {
           due_on: cycleEnd,
           period_starts_on: cycleStart,
           period_ends_on: cycleEnd,
-          amount_cents: rate.amount_cents,
+          amount_cents: cycleAmount,
           created_by: auth.claims.sub,
           external_source: "notion-cycle-rate",
           external_id: externalId,
@@ -104,7 +113,7 @@ export async function saveBillingFrequency(formData: FormData) {
       let paymentId = existingPayment?.id;
       if (paymentId) {
         await supabase.from("payments").update({
-          amount_cents: rate.amount_cents,
+          amount_cents: cycleAmount,
         }).eq("id", paymentId);
       } else {
         const { data: payment } = await supabase
@@ -112,7 +121,7 @@ export async function saveBillingFrequency(formData: FormData) {
           .insert({
             gymnast_id: gymnastId,
             paid_on: cycleStart,
-            amount_cents: rate.amount_cents,
+            amount_cents: cycleAmount,
             payment_method: "other",
             notes: "Ciclo marcado Al día en Notion",
             received_by: auth.claims.sub,
@@ -132,13 +141,13 @@ export async function saveBillingFrequency(formData: FormData) {
           .maybeSingle();
         if (allocation) {
           await supabase.from("payment_allocations").update({
-            amount_cents: rate.amount_cents,
+            amount_cents: cycleAmount,
           }).eq("payment_id", paymentId).eq("charge_id", chargeId);
         } else {
           await supabase.from("payment_allocations").insert({
             payment_id: paymentId,
             charge_id: chargeId,
-            amount_cents: rate.amount_cents,
+            amount_cents: cycleAmount,
           });
         }
       }
