@@ -67,7 +67,7 @@ export default async function PreparationProgramsPage({
           ) : (
             <div className="preparation-list">
               {programs.map((program) => (
-                <article className="preparation-card" key={program.id}>
+                <Link href={`/programas-preparacion/${program.id}`} className="preparation-card" key={program.id}>
                   <div>
                     <span className={`preparation-status ${program.status}`}>{statusLabels[program.status]}</span>
                     <h2>{program.name}</h2>
@@ -79,7 +79,8 @@ export default async function PreparationProgramsPage({
                     <div><dt>Valor base</dt><dd>{money(program.base_price_cents)}</dd></div>
                     <div><dt>Inscritas</dt><dd>{program.preparation_program_enrollments?.[0]?.count ?? 0}</dd></div>
                   </dl>
-                </article>
+                  <span className="preparation-open">Abrir lista y asistencia →</span>
+                </Link>
               ))}
             </div>
           )}
