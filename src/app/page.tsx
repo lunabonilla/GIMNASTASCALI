@@ -10,16 +10,40 @@ type StaffProfile = {
 };
 
 const navigation = [
-  { label: "Inicio", icon: "⌂", active: true, href: "/" },
-  { label: "Clases de prueba", icon: "◇", href: "/pruebas" },
-  { label: "Gimnastas", icon: "○", href: "/gimnastas" },
-  { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
-  { label: "Asistencia", icon: "✓", href: "/asistencia" },
-  { label: "Programas de preparación", icon: "★", href: "/programas-preparacion" },
-  { label: "Competencias", icon: "🏆", href: "/competencias" },
-  { label: "Cartera y pagos", icon: "$", href: "/pagos" },
-  { label: "Inventario", icon: "□", href: "/inventario" },
-  { label: "Ventas", icon: "↗", href: "/ventas" },
+  {
+    label: "General",
+    items: [{ label: "Inicio", icon: "⌂", active: true, href: "/" }],
+  },
+  {
+    label: "Gestión deportiva",
+    items: [
+      { label: "Gimnastas", icon: "○", href: "/gimnastas" },
+      { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
+      { label: "Asistencia", icon: "✓", href: "/asistencia" },
+      { label: "Clases de prueba", icon: "◇", href: "/pruebas" },
+    ],
+  },
+  {
+    label: "Competencias",
+    items: [
+      { label: "Calendario", icon: "🏆", href: "/competencias" },
+      { label: "Preparación", icon: "★", href: "/programas-preparacion" },
+    ],
+  },
+  {
+    label: "Finanzas",
+    items: [
+      { label: "Cartera y pagos", icon: "$", href: "/pagos" },
+      { label: "Mensajes de cobro", icon: "✉", href: "/pagos/mensajes" },
+    ],
+  },
+  {
+    label: "Tienda",
+    items: [
+      { label: "Inventario", icon: "□", href: "/inventario" },
+      { label: "Ventas", icon: "↗", href: "/ventas" },
+    ],
+  },
 ];
 
 const modules = [
@@ -38,11 +62,11 @@ const modules = [
     href: "/grupos/nuevo",
   },
   {
-    title: "Programa de preparación",
-    description: "Crea una preparación adicional y organiza sus participantes.",
-    action: "Gestionar programas",
-    icon: "★",
-    href: "/programas-preparacion",
+    title: "Tomar asistencia",
+    description: "Abre un grupo y registra la asistencia o las recuperaciones.",
+    action: "Ver grupos",
+    icon: "✓",
+    href: "/asistencia",
   },
   {
     title: "Registrar pago",
@@ -97,6 +121,8 @@ export default async function Home() {
   todayStart.setHours(0, 0, 0, 0);
   const tomorrowStart = new Date(todayStart);
   tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const today = todayStart.toISOString().slice(0, 10);
+  const weekday = todayStart.getDay() || 7;
 
   const [
     { count: activeGymnasts },
@@ -104,6 +130,10 @@ export default async function Home() {
     { count: todayTrials },
     { count: activeGroups },
     { data: billingCharges },
+    { data: todaySchedule },
+    { data: products },
+    { count: pendingTrials },
+    { data: upcomingCompetitions },
   ] = await Promise.all([
     supabase
       .from("gymnasts")
@@ -124,18 +154,59 @@ export default async function Home() {
       .eq("active", true),
     supabase
       .from("billing_charges")
-      .select("amount_cents, payment_allocations(amount_cents)")
+      .select("amount_cents, due_on, payment_allocations(amount_cents)")
       .is("voided_at", null),
+    supabase
+      .from("group_schedule_slots")
+      .select("id, starts_at, ends_at, location, training_groups(id, name, active, staff_profiles(full_name), enrollments(id))")
+      .eq("weekday", weekday)
+      .order("starts_at"),
+    supabase
+      .from("products")
+      .select("id, stock_quantity, minimum_stock")
+      .eq("active", true),
+    supabase
+      .from("trial_bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "scheduled")
+      .gte("scheduled_for", todayStart.toISOString()),
+    supabase
+      .from("competitions")
+      .select("id, name, starts_on, city, country, status")
+      .neq("status", "cancelled")
+      .gte("starts_on", today)
+      .order("starts_on")
+      .limit(3),
   ]);
 
-  const pendingBalance = (billingCharges ?? []).reduce((total, charge) => {
+  const outstandingCharges = (billingCharges ?? []).map((charge) => {
     const paid = (charge.payment_allocations ?? []).reduce(
       (subtotal: number, allocation: { amount_cents: number }) =>
         subtotal + Number(allocation.amount_cents),
       0,
     );
-    return total + Number(charge.amount_cents) - paid;
-  }, 0);
+    return {
+      balance: Number(charge.amount_cents) - paid,
+      dueOn: charge.due_on,
+    };
+  });
+
+  const pendingBalance = outstandingCharges.reduce(
+    (total, charge) => total + Math.max(0, charge.balance),
+    0,
+  );
+  const overdueCharges = outstandingCharges.filter(
+    (charge) => charge.balance > 0 && charge.dueOn < today,
+  ).length;
+  const lowStock = (products ?? []).filter(
+    (product) => product.stock_quantity <= product.minimum_stock,
+  ).length;
+  const schedule = (todaySchedule ?? []).filter((slot) => {
+    const relation = slot.training_groups;
+    const group = Array.isArray(relation) ? relation[0] : relation;
+    return group?.active;
+  });
+  const alertCount = overdueCharges + lowStock + (pendingTrials ?? 0);
 
   const metrics = [
     {
@@ -193,17 +264,22 @@ export default async function Home() {
         </div>
 
         <nav aria-label="Navegación principal">
-          {navigation.map((item) => (
-            <Link
-              href={item.href ?? "#"}
-              className={`nav-item ${item.active ? "active" : ""}`}
-              key={item.label}
-            >
-              <span className="nav-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              {item.label}
-            </Link>
+          {navigation.map((section) => (
+            <div className="nav-section" key={section.label}>
+              <span className="nav-section-label">{section.label}</span>
+              {section.items.map((item) => (
+                <Link
+                  href={item.href}
+                  className={`nav-item ${"active" in item && item.active ? "active" : ""}`}
+                  key={item.label}
+                >
+                  <span className="nav-icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -241,14 +317,14 @@ export default async function Home() {
         <div className="content">
           <section className="welcome-card">
             <div>
-              <span className="pill">Tu plataforma está lista</span>
-              <h2>Todo el club, en un solo lugar.</h2>
+              <span className="pill">Resumen de hoy</span>
+              <h2>El club organizado, en un solo lugar.</h2>
               <p>
-                Empieza configurando los grupos y horarios de Gimnastas Cali.
-                Desde aquí podrás acompañar cada clase, pago y proceso.
+                Consulta las gimnastas, entrenamientos, competencias, cartera y
+                tienda desde un mismo espacio.
               </p>
-              <Link href="/grupos/nuevo" className="welcome-action">
-                Configurar mi club →
+              <Link href="/gimnastas" className="welcome-action">
+                Ver directorio de gimnastas →
               </Link>
             </div>
             <div className="welcome-mark" aria-hidden="true">
@@ -281,23 +357,44 @@ export default async function Home() {
                   <span className="section-kicker">Agenda</span>
                   <h2>Hoy en el gimnasio</h2>
                 </div>
-                <button className="text-button">Ver calendario →</button>
+                <Link href="/grupos" className="text-button">Ver horarios →</Link>
               </div>
-              <div className="empty-state">
-                <div className="empty-illustration">
-                  <span>15:00</span>
-                  <span>20:30</span>
-                  <i />
+              {schedule.length ? (
+                <div className="today-schedule">
+                  {schedule.map((slot) => {
+                    const relation = slot.training_groups;
+                    const group = Array.isArray(relation) ? relation[0] : relation;
+                    const coachRelation = group?.staff_profiles;
+                    const coach = Array.isArray(coachRelation)
+                      ? coachRelation[0]
+                      : coachRelation;
+                    return (
+                      <Link href={`/asistencia/${group?.id}`} className="schedule-row" key={slot.id}>
+                        <span className="schedule-time">{slot.starts_at.slice(0, 5)}</span>
+                        <span>
+                          <strong>{group?.name}</strong>
+                          <small>
+                            {coach?.full_name ?? "Profesora por asignar"}
+                            {slot.location ? ` · ${slot.location}` : ""}
+                          </small>
+                        </span>
+                        <span className="schedule-count">
+                          {group?.enrollments?.length ?? 0} gimnastas
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
-                <h3>Aún no hay clases programadas</h3>
-                <p>
-                  Cuando configures tus grupos, el horario de cada día aparecerá
-                  aquí.
-                </p>
-                <Link href="/grupos/nuevo" className="secondary-button">
-                  Crear primer grupo
-                </Link>
-              </div>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-illustration">
+                    <span>15:00</span><span>20:30</span><i />
+                  </div>
+                  <h3>No hay clases programadas para hoy</h3>
+                  <p>Consulta los demás días o crea un nuevo horario.</p>
+                  <Link href="/grupos" className="secondary-button">Ver horarios</Link>
+                </div>
+              )}
             </section>
 
             <section className="panel alerts-panel">
@@ -306,40 +403,69 @@ export default async function Home() {
                   <span className="section-kicker">Atención</span>
                   <h2>Alertas del club</h2>
                 </div>
-                <span className="counter">0</span>
+                <span className="counter">{alertCount}</span>
               </div>
-              <div className="alert-empty">
-                <span>✓</span>
-                <div>
-                  <h3>Todo bajo control</h3>
-                  <p>No tienes alertas pendientes por ahora.</p>
+              {alertCount === 0 && (
+                <div className="alert-empty">
+                  <span>✓</span>
+                  <div><h3>Todo bajo control</h3><p>No tienes alertas pendientes por ahora.</p></div>
                 </div>
-              </div>
+              )}
               <div className="alert-list">
-                <div>
+                <Link href="/pagos">
                   <span className="dot purple" />
-                  <p>Pagos próximos a vencer</p>
-                  <strong>0</strong>
-                </div>
-                <div>
+                  <p>Cobros vencidos</p>
+                  <strong>{overdueCharges}</strong>
+                </Link>
+                <Link href="/inventario">
                   <span className="dot orange" />
                   <p>Inventario bajo</p>
-                  <strong>0</strong>
-                </div>
-                <div>
+                  <strong>{lowStock}</strong>
+                </Link>
+                <Link href="/pruebas">
                   <span className="dot blue" />
-                  <p>Pruebas por confirmar</p>
-                  <strong>0</strong>
-                </div>
+                  <p>Pruebas programadas</p>
+                  <strong>{pendingTrials ?? 0}</strong>
+                </Link>
               </div>
             </section>
           </div>
 
+          <section className="upcoming-section">
+            <div className="section-heading">
+              <div>
+                <span className="section-kicker">Calendario deportivo</span>
+                <h2>Próximas competencias</h2>
+              </div>
+              <Link href="/competencias" className="text-button">Ver calendario completo →</Link>
+            </div>
+            <div className="competition-strip">
+              {(upcomingCompetitions ?? []).map((competition) => (
+                <Link href="/competencias" className="competition-summary" key={competition.id}>
+                  <span className={`competition-status ${competition.status}`}>
+                    {competition.status === "confirmed" ? "Confirmada" : "En definición"}
+                  </span>
+                  <strong>{competition.name}</strong>
+                  <small>
+                    {new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long" }).format(
+                      new Date(`${competition.starts_on}T12:00:00`),
+                    )}
+                    {" · "}
+                    {[competition.city, competition.country].filter(Boolean).join(", ") || "Lugar por definir"}
+                  </small>
+                </Link>
+              ))}
+              {!upcomingCompetitions?.length && (
+                <p className="no-competitions">No hay competencias próximas con fecha confirmada.</p>
+              )}
+            </div>
+          </section>
+
           <section className="quick-section">
             <div className="section-heading">
               <div>
-                <span className="section-kicker">Primeros pasos</span>
-                <h2>¿Qué quieres hacer?</h2>
+                <span className="section-kicker">Accesos rápidos</span>
+                <h2>Acciones frecuentes</h2>
               </div>
             </div>
             <div className="quick-grid">
