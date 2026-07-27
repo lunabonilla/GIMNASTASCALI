@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 
 type SearchParams = Promise<{
   q?: string;
+  status?: string;
+  level?: string;
   created?: string;
   imported?: string;
   pending?: string;
@@ -18,7 +20,14 @@ export default async function GymnastsPage({
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const { q = "", created, imported, pending } = await searchParams;
+  const {
+    q = "",
+    status = "active",
+    level = "",
+    created,
+    imported,
+    pending,
+  } = await searchParams;
   let query = supabase
     .from("gymnasts")
     .select("id, first_name, last_name, birth_date, identity_document, status, levels(name), gymnast_guardians(guardian_id)")
@@ -30,8 +39,22 @@ export default async function GymnastsPage({
       `first_name.ilike.%${safeQuery}%,last_name.ilike.%${safeQuery}%,identity_document.ilike.%${safeQuery}%`,
     );
   }
+  if (["active", "suspended", "retired"].includes(status)) {
+    query = query.eq("status", status);
+  }
+  if (level) {
+    query = query.eq("level_id", level);
+  }
 
-  const { data, error } = await query;
+  const [{ data, error }, { data: levelData }] = await Promise.all([
+    query,
+    supabase
+      .from("levels")
+      .select("id, name")
+      .eq("active", true)
+      .order("sort_order"),
+  ]);
+  const levels = (levelData ?? []) as Array<{ id: string; name: string }>;
   const gymnasts = (data ?? []) as Array<{
     id: string;
     first_name: string;
@@ -74,7 +97,7 @@ export default async function GymnastsPage({
           </div>
         )}
 
-        <form className="search-bar">
+        <form className="search-bar filter-bar">
           <input
             type="search"
             name="q"
@@ -82,8 +105,22 @@ export default async function GymnastsPage({
             placeholder="Buscar por nombre o documento"
             aria-label="Buscar gimnastas"
           />
-          <button type="submit">Buscar</button>
-          {q && <Link href="/gimnastas">Limpiar</Link>}
+          <select name="status" defaultValue={status} aria-label="Filtrar por estado">
+            <option value="active">Activas</option>
+            <option value="suspended">Pausadas</option>
+            <option value="retired">Retiradas</option>
+            <option value="all">Todos los estados</option>
+          </select>
+          <select name="level" defaultValue={level} aria-label="Filtrar por nivel">
+            <option value="">Todos los niveles</option>
+            {levels.map((item) => (
+              <option value={item.id} key={item.id}>{item.name}</option>
+            ))}
+          </select>
+          <button type="submit">Aplicar</button>
+          {(q || status !== "active" || level) && (
+            <Link href="/gimnastas">Limpiar</Link>
+          )}
         </form>
 
         <section className="data-panel">
@@ -116,7 +153,8 @@ export default async function GymnastsPage({
                     <th>Documento</th>
                     <th>Fecha de nacimiento</th>
                     <th>Nivel</th>
-                    <th>Estado</th>
+                    <th>Estado deportivo</th>
+                    <th>Información</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -137,6 +175,15 @@ export default async function GymnastsPage({
                           : "Sin registrar"}
                       </td>
                       <td>{gymnast.levels?.[0]?.name || "Sin asignar"}</td>
+                      <td>
+                        <span className={`sport-status ${gymnast.status}`}>
+                          {gymnast.status === "active"
+                            ? "Activa"
+                            : gymnast.status === "suspended"
+                              ? "Pausada"
+                              : "Retirada"}
+                        </span>
+                      </td>
                       <td>
                         {gymnast.gymnast_guardians.length ? (
                           <span className="status-chip">Completa</span>

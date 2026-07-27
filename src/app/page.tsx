@@ -20,37 +20,6 @@ const navigation = [
   { label: "Ventas", icon: "↗" },
 ];
 
-const metrics = [
-  {
-    label: "Gimnastas activas",
-    value: "—",
-    note: "Registra la primera gimnasta",
-    tone: "lilac",
-    icon: "○",
-  },
-  {
-    label: "Clases de prueba",
-    value: "—",
-    note: "Sin pruebas para hoy",
-    tone: "peach",
-    icon: "◇",
-  },
-  {
-    label: "Cartera pendiente",
-    value: "$ 0",
-    note: "Todo está al día",
-    tone: "mint",
-    icon: "$",
-  },
-  {
-    label: "Grupos activos",
-    value: "—",
-    note: "Crea el primer grupo",
-    tone: "sky",
-    icon: "▦",
-  },
-];
-
 const modules = [
   {
     title: "Agendar clase de prueba",
@@ -112,6 +81,73 @@ export default async function Home() {
     .join("")
     .toUpperCase();
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+  const [
+    { count: activeGymnasts },
+    { count: pausedGymnasts },
+    { count: todayTrials },
+    { count: activeGroups },
+  ] = await Promise.all([
+    supabase
+      .from("gymnasts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active"),
+    supabase
+      .from("gymnasts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "suspended"),
+    supabase
+      .from("trial_bookings")
+      .select("*", { count: "exact", head: true })
+      .gte("scheduled_for", todayStart.toISOString())
+      .lt("scheduled_for", tomorrowStart.toISOString()),
+    supabase
+      .from("training_groups")
+      .select("*", { count: "exact", head: true })
+      .eq("active", true),
+  ]);
+
+  const metrics = [
+    {
+      label: "Gimnastas activas",
+      value: String(activeGymnasts ?? 0),
+      note: `${pausedGymnasts ?? 0} pausadas actualmente`,
+      tone: "lilac",
+      icon: "○",
+    },
+    {
+      label: "Clases de prueba",
+      value: String(todayTrials ?? 0),
+      note: "Programadas para hoy",
+      tone: "peach",
+      icon: "◇",
+    },
+    {
+      label: "Cartera pendiente",
+      value: "$ 0",
+      note: "Activaremos el módulo de pagos",
+      tone: "mint",
+      icon: "$",
+    },
+    {
+      label: "Grupos activos",
+      value: String(activeGroups ?? 0),
+      note: activeGroups ? "Con horarios configurados" : "Crea el primer grupo",
+      tone: "sky",
+      icon: "▦",
+    },
+  ];
+
+  const currentDate = new Intl.DateTimeFormat("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -158,7 +194,7 @@ export default async function Home() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Domingo, 26 de julio</p>
+            <p className="eyebrow">{currentDate}</p>
             <h1>Hola, {profile.full_name.split(" ")[0]}</h1>
           </div>
           <div className="topbar-actions">

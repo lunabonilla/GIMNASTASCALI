@@ -116,6 +116,7 @@ body {
 }
 
 .search-bar input,
+.search-bar select,
 .gymnast-form input,
 .gymnast-form select {
   min-height: 45px;
@@ -124,6 +125,10 @@ body {
   outline: none;
   background: var(--white);
   padding: 0 14px;
+}
+
+.filter-bar select {
+  min-width: 150px;
 }
 
 .search-bar input:focus,
@@ -205,6 +210,29 @@ th {
 .status-chip.pending {
   color: #956115;
   background: #fff3da;
+}
+
+.sport-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sport-status.active {
+  color: #23704d;
+  background: #eaf8f1;
+}
+
+.sport-status.suspended {
+  color: #956115;
+  background: #fff3da;
+}
+
+.sport-status.retired {
+  color: #766d7b;
+  background: #efedf1;
 }
 
 .row-link {
@@ -375,6 +403,11 @@ th {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .search-bar {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .full-field {
