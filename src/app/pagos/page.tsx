@@ -103,7 +103,10 @@ export default async function PaymentsPage({
           <h1>Cartera y pagos</h1>
           <p>Consulta saldos, crea cobros y registra abonos por deportista.</p>
         </div>
-        <Link href="/pagos/nuevo" className="primary-button">＋ Nuevo cargo</Link>
+        <div className="header-actions">
+          <Link href="/pagos/tarifas" className="secondary-button">Ver tarifas 2026</Link>
+          <Link href="/pagos/nuevo" className="primary-button">＋ Nuevo cargo</Link>
+        </div>
       </header>
 
       <section className="module-content">

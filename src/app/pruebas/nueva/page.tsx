@@ -20,6 +20,7 @@ export default async function NewTrialPage({
         <div className="form-heading">
           <span className="section-kicker">Nueva visita</span>
           <h1>Agendar clase de prueba</h1>
+          <p className="form-price-note">Tarifa vigente: <strong>$60.000</strong></p>
           <p>Registra a la niña, su responsable y el momento de la visita.</p>
         </div>
         {error && <div className="error-banner">{error}</div>}

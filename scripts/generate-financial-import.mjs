@@ -337,6 +337,259 @@ where external_source = 'notion'
   );
 `,
 );
+
+const normalizeOfficialCycleAmount = (program, paid) => {
+  const fixed = {
+    Intensivo: 660000,
+  };
+  if (fixed[program]) return fixed[program];
+  if (paid > 0 && paid < 1000) return paid * 1000;
+  return paid;
+};
+
+const officialCycleRows = cycleRaw
+  .map((row, index) => {
+    const gymnast = row["Nombre de la deportista"]?.trim();
+    const program = row.Programa?.trim();
+    const start = spanishDate(row["Inicio ciclo"]);
+    const end = spanishDate(row["Fecha fin del ciclo"]) || spanishDate(row["Próximo ciclo"]);
+    const originalPaid = amount(row["Valor pagado"]);
+    const normalizedPaid = originalPaid > 0 && originalPaid < 1000
+      ? originalPaid * 1000
+      : originalPaid;
+    const officialAmount = normalizeOfficialCycleAmount(program, originalPaid);
+    if (!gymnast || !start || !end || officialAmount <= 0) return null;
+    return {
+      source: hash("notion-cycle", { index, row }),
+      gymnast,
+      program,
+      start,
+      end,
+      paid: Math.min(officialAmount, normalizedPaid),
+      amount: officialAmount,
+      concept: `Ciclo ${start} a ${end}`,
+      notes: [
+        program ? `Programa: ${program}` : "",
+        row.Nivel ? `Nivel: ${row.Nivel}` : "",
+        row.Observaciones,
+        `Estado original: ${row["Estado del ciclo"] || "Sin estado"}`,
+      ].filter(Boolean).join(" · "),
+    };
+  })
+  .filter(Boolean);
+
+const officialCycleValues = officialCycleRows.map((row) => `(
+  ${sql(row.source)}, ${sql(row.gymnast)}, ${sql(row.program)},
+  ${sql(row.start)}::date, ${sql(row.end)}::date,
+  ${row.amount * 100}::bigint, ${row.paid * 100}::bigint,
+  ${sql(row.concept)}, ${sql(row.notes)}
+)`).join(",\n");
+
+const officialRatesPath = new URL(
+  "../supabase/migrations/20260726262000_apply_official_2026_cycle_rates.sql",
+  import.meta.url,
+);
+fs.writeFileSync(officialRatesPath, `create table if not exists public.billing_rate_plans (
+  id uuid primary key default gen_random_uuid(),
+  program text not null,
+  days_per_week integer,
+  class_duration_minutes integer,
+  cycle_weeks integer not null default 4,
+  amount_cents bigint not null check (amount_cents > 0),
+  effective_year integer not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (program, days_per_week, effective_year)
+);
+
+insert into public.billing_rate_plans (
+  program, days_per_week, class_duration_minutes, cycle_weeks,
+  amount_cents, effective_year
+) values
+  ('Minis', 1, 60, 4, 17800000, 2026),
+  ('Minis', 2, 60, 4, 27500000, 2026),
+  ('Regular', 1, 90, 4, 22700000, 2026),
+  ('Regular', 2, 90, 4, 37400000, 2026),
+  ('Intensivo', null, null, 4, 66000000, 2026)
+on conflict (program, days_per_week, effective_year)
+do update set
+  class_duration_minutes = excluded.class_duration_minutes,
+  cycle_weeks = excluded.cycle_weeks,
+  amount_cents = excluded.amount_cents,
+  active = true;
+
+create table if not exists public.gymnast_billing_profiles (
+  gymnast_id uuid primary key references public.gymnasts(id) on delete cascade,
+  program text,
+  days_per_week integer check (days_per_week is null or days_per_week in (1, 2)),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.billing_rate_plans enable row level security;
+alter table public.gymnast_billing_profiles enable row level security;
+
+create policy "authenticated reads billing rates"
+on public.billing_rate_plans for select to authenticated using (true);
+create policy "management manages billing rates"
+on public.billing_rate_plans for all to authenticated
+using (public.is_management()) with check (public.is_management());
+create policy "management manages gymnast billing profiles"
+on public.gymnast_billing_profiles for all to authenticated
+using (public.is_management()) with check (public.is_management());
+
+grant select, insert, update, delete on public.billing_rate_plans to authenticated;
+grant select, insert, update, delete on public.gymnast_billing_profiles to authenticated;
+
+create table if not exists public.club_fee_settings (
+  fee_key text primary key,
+  label text not null,
+  amount_cents bigint not null check (amount_cents > 0),
+  effective_from date not null,
+  notes text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.club_fee_settings enable row level security;
+create policy "authenticated reads club fee settings"
+on public.club_fee_settings for select to authenticated using (true);
+create policy "management manages club fee settings"
+on public.club_fee_settings for all to authenticated
+using (public.is_management()) with check (public.is_management());
+grant select, insert, update, delete on public.club_fee_settings to authenticated;
+
+insert into public.club_fee_settings (
+  fee_key, label, amount_cents, effective_from, notes
+) values
+  ('enrollment_2026_current', 'Matrícula 2026 vigente', 14000000, '2026-07-27', 'Valor reducido por avance del año; tarifa inicial: $160.000'),
+  ('trial_class_2026', 'Clase de prueba 2026', 6000000, '2026-01-01', 'Tarifa oficial 2026')
+on conflict (fee_key) do update set
+  label = excluded.label,
+  amount_cents = excluded.amount_cents,
+  effective_from = excluded.effective_from,
+  notes = excluded.notes,
+  updated_at = now();
+
+create temporary table official_cycle_stage (
+  external_id text primary key,
+  gymnast_name text not null,
+  program text,
+  starts_on date not null,
+  ends_on date not null,
+  amount_cents bigint not null,
+  paid_cents bigint not null,
+  concept text not null,
+  notes text
+) on commit drop;
+
+insert into official_cycle_stage values
+${officialCycleValues};
+
+insert into public.billing_charges (
+  gymnast_id, concept, category, description, issued_on, due_on,
+  period_starts_on, period_ends_on, amount_cents, external_source, external_id
+)
+select
+  (array_agg(gymnasts.id))[1],
+  stage.concept,
+  'monthly_fee',
+  stage.notes,
+  stage.starts_on,
+  stage.ends_on,
+  stage.starts_on,
+  stage.ends_on,
+  stage.amount_cents,
+  'notion',
+  stage.external_id
+from official_cycle_stage stage
+join public.gymnasts
+  on lower(unaccent(trim(gymnasts.first_name || ' ' || gymnasts.last_name)))
+   = lower(unaccent(trim(stage.gymnast_name)))
+group by stage.external_id, stage.concept, stage.notes, stage.starts_on,
+  stage.ends_on, stage.amount_cents
+having count(gymnasts.id) = 1
+on conflict (external_source, external_id)
+where external_source is not null and external_id is not null
+do update set
+  amount_cents = excluded.amount_cents,
+  description = excluded.description,
+  period_starts_on = excluded.period_starts_on,
+  period_ends_on = excluded.period_ends_on;
+
+update public.payments payments
+set amount_cents = stage.paid_cents
+from official_cycle_stage stage
+where payments.external_source = 'notion'
+  and payments.external_id = stage.external_id
+  and stage.paid_cents > 0;
+
+update public.payment_allocations allocations
+set amount_cents = stage.paid_cents
+from official_cycle_stage stage
+join public.payments payments
+  on payments.external_source = 'notion'
+ and payments.external_id = stage.external_id
+join public.billing_charges charges
+  on charges.external_source = 'notion'
+ and charges.external_id = stage.external_id
+where allocations.payment_id = payments.id
+  and allocations.charge_id = charges.id
+  and stage.paid_cents > 0;
+
+insert into public.payments (
+  gymnast_id, paid_on, amount_cents, payment_method, notes,
+  external_source, external_id
+)
+select
+  charges.gymnast_id, stage.starts_on, stage.paid_cents, 'other',
+  'Pago histórico importado desde Notion', 'notion', stage.external_id
+from official_cycle_stage stage
+join public.billing_charges charges
+  on charges.external_source = 'notion'
+ and charges.external_id = stage.external_id
+left join public.payments payments
+  on payments.external_source = 'notion'
+ and payments.external_id = stage.external_id
+where stage.paid_cents > 0 and payments.id is null
+on conflict (external_source, external_id)
+where external_source is not null and external_id is not null
+do nothing;
+
+insert into public.payment_allocations (payment_id, charge_id, amount_cents)
+select payments.id, charges.id, stage.paid_cents
+from official_cycle_stage stage
+join public.payments payments
+  on payments.external_source = 'notion'
+ and payments.external_id = stage.external_id
+join public.billing_charges charges
+  on charges.external_source = 'notion'
+ and charges.external_id = stage.external_id
+left join public.payment_allocations allocations
+  on allocations.payment_id = payments.id and allocations.charge_id = charges.id
+where stage.paid_cents > 0 and allocations.payment_id is null;
+
+insert into public.gymnast_billing_profiles (gymnast_id, program, days_per_week)
+select
+  (array_agg(gymnasts.id))[1],
+  stage.program,
+  case
+    when stage.program = 'Minis' and stage.amount_cents = 17800000 then 1
+    when stage.program = 'Minis' and stage.amount_cents = 27500000 then 2
+    when stage.program = 'Regular' and stage.amount_cents = 22700000 then 1
+    when stage.program = 'Regular' and stage.amount_cents = 37400000 then 2
+    else null
+  end
+from official_cycle_stage stage
+join public.gymnasts
+  on lower(unaccent(trim(gymnasts.first_name || ' ' || gymnasts.last_name)))
+   = lower(unaccent(trim(stage.gymnast_name)))
+where stage.program in ('Minis', 'Regular', 'Intensivo')
+group by stage.gymnast_name, stage.program, stage.amount_cents
+having count(gymnasts.id) = 1
+on conflict (gymnast_id) do update set
+  program = excluded.program,
+  days_per_week = coalesce(excluded.days_per_week, public.gymnast_billing_profiles.days_per_week),
+  updated_at = now();
+`);
 console.log(JSON.stringify({
   movementRows: movements.length,
   cycleRows: cycles.length,
@@ -347,5 +600,6 @@ console.log(JSON.stringify({
   chargedPesos: rows.reduce((total, row) => total + row.amount, 0),
   paidPesos: rows.reduce((total, row) => total + row.paid, 0),
   inferredCyclesRemovedFromBalance: cycles.filter((row) => row.inferred).length,
+  officialCycleRows: officialCycleRows.length,
   output: outputPath.pathname,
 }, null, 2));
