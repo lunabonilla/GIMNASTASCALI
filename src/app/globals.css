@@ -775,6 +775,64 @@ th {
   border-radius: 14px;
 }
 
+.makeup-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(240px, 1.2fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #d9c8e8;
+  border-radius: 14px;
+  background: #faf6fe;
+  padding: 15px;
+}
+
+.makeup-form strong,
+.makeup-form span {
+  display: block;
+}
+
+.makeup-form strong {
+  color: var(--purple);
+  font-size: 13px;
+}
+
+.makeup-form span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.makeup-form select {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  padding: 0 10px;
+}
+
+.makeup-form button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--white);
+  background: var(--purple);
+  padding: 0 14px;
+  font-weight: 750;
+}
+
+.makeup-row {
+  background: #fcf9ff;
+}
+
+.makeup-row small {
+  display: block;
+  margin-top: 3px;
+  color: var(--purple);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
 .attendance-row {
   display: grid;
   grid-template-columns: 35px 1fr 160px;
@@ -822,6 +880,10 @@ th {
   .attendance-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .makeup-form {
+    grid-template-columns: 1fr;
   }
 }
 
