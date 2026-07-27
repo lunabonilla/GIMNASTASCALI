@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { addMakeupGymnast } from "../actions";
 import { AttendanceForm } from "./attendance-form";
+import { MakeupGymnastForm } from "./makeup-gymnast-form";
 
 type PageProps = {
   params: Promise<{ groupId: string }>;
@@ -137,25 +137,16 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
           </div>
         ) : (
           <>
-          <form action={addMakeupGymnast} className="makeup-form">
-            <input type="hidden" name="group_id" value={groupId} />
-            <input type="hidden" name="date" value={date} />
-            <input type="hidden" name="starts_at" value={slot.starts_at.slice(0, 8)} />
-            <input type="hidden" name="ends_at" value={slot.ends_at.slice(0, 8)} />
-            <div>
-              <strong>Agregar recuperación</strong>
-              <span>Incluye una gimnasta de otro grupo solo para esta clase.</span>
-            </div>
-            <select name="gymnast_id" required defaultValue="">
-              <option value="" disabled>Buscar y seleccionar gimnasta</option>
-              {makeupOptions.map((gymnast) => (
-                <option value={gymnast.id} key={gymnast.id}>
-                  {gymnast.first_name} {gymnast.last_name}
-                </option>
-              ))}
-            </select>
-            <button type="submit">＋ Agregar</button>
-          </form>
+          <MakeupGymnastForm
+            groupId={groupId}
+            date={date}
+            startsAt={slot.starts_at.slice(0, 8)}
+            endsAt={slot.ends_at.slice(0, 8)}
+            gymnasts={makeupOptions.map((gymnast) => ({
+              id: gymnast.id,
+              name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+            }))}
+          />
           <AttendanceForm
             groupId={groupId}
             date={date}
