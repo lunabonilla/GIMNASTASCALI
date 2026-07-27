@@ -62,7 +62,7 @@ export default async function GymnastsPage({
     birth_date: string | null;
     identity_document: string | null;
     status: "active" | "suspended" | "retired";
-    levels: Array<{ name: string }> | null;
+    levels: { name: string } | Array<{ name: string }> | null;
     gymnast_guardians: Array<{ guardian_id: string }>;
     gymnast_billing_profiles:
       | { program: string | null; days_per_week: number | null }
@@ -183,6 +183,9 @@ export default async function GymnastsPage({
                     const days = (group?.group_schedule_slots ?? [])
                       .map((slot) => dayLabels[slot.weekday])
                       .join(", ");
+                    const gymnastLevel = Array.isArray(gymnast.levels)
+                      ? gymnast.levels[0]
+                      : gymnast.levels;
                     return (
                     <tr key={gymnast.id}>
                       <td>
@@ -192,7 +195,7 @@ export default async function GymnastsPage({
                         <small className="table-secondary">{gymnast.identity_document || "Documento pendiente"}</small>
                       </td>
                       <td><span className="notion-tag blue">{billing?.program || "Sin programa"}</span></td>
-                      <td>{gymnast.levels?.[0]?.name || "Sin asignar"}</td>
+                      <td><span className="notion-tag purple">{gymnastLevel?.name || "Sin asignar"}</span></td>
                       <td>
                         <strong className="table-group-name">{group?.name || "Sin grupo"}</strong>
                         <small className="table-secondary">{days || "Días pendientes"}</small>

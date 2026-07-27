@@ -16,7 +16,7 @@ export default async function AttendancePage() {
     id: string;
     name: string;
     capacity: number;
-    levels: Array<{ name: string }> | null;
+    levels: { name: string } | Array<{ name: string }> | null;
     staff_profiles: Array<{ full_name: string }> | null;
     group_schedule_slots: Array<{ weekday: number; starts_at: string; ends_at: string }>;
     enrollments: Array<{ id: string }>;
@@ -43,18 +43,20 @@ export default async function AttendancePage() {
           </div>
         ) : (
           <div className="attendance-group-list">
-            {groups.map((group) => (
+            {groups.map((group) => {
+              const groupLevel = Array.isArray(group.levels) ? group.levels[0] : group.levels;
+              return (
               <Link href={`/asistencia/${group.id}`} className="attendance-group-card" key={group.id}>
                 <span className="attendance-check">✓</span>
                 <div>
-                  <small>{group.levels?.[0]?.name ?? "Sin nivel"}</small>
+                  <small>{groupLevel?.name ?? "Sin nivel"}</small>
                   <h2>{group.name}</h2>
                   <p>{group.staff_profiles?.[0]?.full_name ?? "Sin profesora asignada"}</p>
                 </div>
                 <strong>{group.enrollments.length} gimnastas</strong>
                 <i>→</i>
               </Link>
-            ))}
+            );})}
           </div>
         )}
       </section>

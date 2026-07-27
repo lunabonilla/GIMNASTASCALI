@@ -62,6 +62,7 @@ export default async function GymnastProfilePage({ params, searchParams }: PageP
   const coachRelation = group?.staff_profiles;
   const coach = Array.isArray(coachRelation) ? coachRelation[0] : coachRelation;
   const levels = levelData ?? [];
+  const currentLevel = levels.find((level) => level.id === gymnast.level_id);
   const charged = (charges ?? []).reduce((total, charge) => total + Number(charge.amount_cents), 0);
   const paid = (charges ?? []).reduce(
     (total, charge) => total + (charge.payment_allocations ?? []).reduce(
@@ -87,6 +88,7 @@ export default async function GymnastProfilePage({ params, searchParams }: PageP
                 {gymnast.status === "active" ? "Activa" : gymnast.status === "suspended" ? "Pausada" : "Retirada"}
               </span>
               <span>{billingProfile?.program ?? group?.billing_program ?? "Programa pendiente"}</span>
+              <span>{currentLevel?.name ?? "Nivel pendiente"}</span>
               <span>{group?.name ?? "Sin grupo"}</span>
             </div>
           </div>

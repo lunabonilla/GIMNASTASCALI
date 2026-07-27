@@ -815,6 +815,11 @@ th {
   background: #e2effc;
 }
 
+.notion-tag.purple {
+  color: #6f4c85;
+  background: #eee2f5;
+}
+
 .profile-hero {
   padding: 42px max(32px, calc((100vw - 1500px) / 2));
   background: #fff;

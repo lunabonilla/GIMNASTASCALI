@@ -55,7 +55,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     capacity: number;
     monthly_fee_cents: number;
     billing_program: string | null;
-    levels: Array<{ name: string }> | null;
+    levels: { name: string } | Array<{ name: string }> | null;
     staff_profiles: Array<{ full_name: string }> | null;
     group_schedule_slots: Array<{
       weekday: number;
@@ -80,13 +80,14 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     last_name: string;
   }>).filter((gymnast) => !enrolledIds.has(gymnast.id));
   const full = enrollments.length >= detail.capacity;
+  const detailLevel = Array.isArray(detail.levels) ? detail.levels[0] : detail.levels;
 
   return (
     <main className="module-page">
       <header className="module-header">
         <div>
           <Link href="/grupos" className="back-link">← Volver a grupos</Link>
-          <p className="eyebrow">{detail.levels?.[0]?.name ?? "Sin nivel"}</p>
+          <p className="eyebrow">{detailLevel?.name ?? "Sin nivel"}</p>
           <h1>{detail.name}</h1>
           <p>
             {detail.staff_profiles?.[0]?.full_name ?? "Sin profesora"} ·{" "}

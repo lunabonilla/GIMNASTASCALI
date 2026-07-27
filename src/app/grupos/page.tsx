@@ -26,7 +26,7 @@ export default async function GroupsPage({
     id: string; name: string; group_type: "regular" | "integral";
     billing_program: string | null;
     capacity: number; monthly_fee_cents: number; active: boolean;
-    levels: Array<{ name: string }> | null;
+    levels: { name: string } | Array<{ name: string }> | null;
     staff_profiles: Array<{ full_name: string }> | null;
     group_schedule_slots: Array<{ weekday: number; starts_at: string; ends_at: string; location: string | null }>;
     enrollments: Array<{ id: string }>;
@@ -59,6 +59,7 @@ export default async function GroupsPage({
             {groups.map((group) => {
               const occupied = group.enrollments.length;
               const percentage = Math.min(100, Math.round((occupied / group.capacity) * 100));
+              const groupLevel = Array.isArray(group.levels) ? group.levels[0] : group.levels;
               return (
                 <article className="group-card" key={group.id}>
                   <div className="group-card-top">
@@ -69,7 +70,7 @@ export default async function GroupsPage({
                     <span className="status-chip">{group.active ? "Activo" : "Inactivo"}</span>
                   </div>
                   <div className="group-meta">
-                    <div><span>Nivel</span><strong>{group.levels?.[0]?.name ?? "Sin asignar"}</strong></div>
+                    <div><span>Nivel</span><strong>{groupLevel?.name ?? "Sin asignar"}</strong></div>
                     <div><span>Profesora</span><strong>{group.staff_profiles?.[0]?.full_name ?? "Sin asignar"}</strong></div>
                   </div>
                   <div className="schedule-list">
