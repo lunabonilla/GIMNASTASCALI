@@ -12,18 +12,13 @@ const money = (cents: number) =>
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; view?: string; program?: string; level?: string }>;
+  searchParams: Promise<{ q?: string; view?: string }>;
 }) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const {
-    q = "",
-    view = "collect",
-    program = "",
-    level: levelFilter = "",
-  } = await searchParams;
+  const { q = "", view = "collect" } = await searchParams;
   const [
     { data, error },
     { count: archivedCount },
@@ -31,7 +26,7 @@ export default async function PaymentsPage({
   ] = await Promise.all([
     supabase
       .from("billing_charges")
-      .select("id, gymnast_id, amount_cents, due_on, period_starts_on, voided_at, gymnasts(first_name, last_name, status, levels(name), gymnast_billing_profiles(program)), payment_allocations(amount_cents)")
+      .select("id, gymnast_id, amount_cents, due_on, period_starts_on, voided_at, gymnasts(first_name, last_name, status), payment_allocations(amount_cents)")
       .is("voided_at", null)
       .order("due_on"),
     supabase
@@ -50,13 +45,9 @@ export default async function PaymentsPage({
     gymnasts:
       | {
           first_name: string; last_name: string; status: string;
-          levels: { name: string } | Array<{ name: string }> | null;
-          gymnast_billing_profiles: { program: string | null } | Array<{ program: string | null }> | null;
         }
       | Array<{
           first_name: string; last_name: string; status: string;
-          levels: { name: string } | Array<{ name: string }> | null;
-          gymnast_billing_profiles: { program: string | null } | Array<{ program: string | null }> | null;
         }>
       | null;
     period_starts_on: string | null;
@@ -72,8 +63,6 @@ export default async function PaymentsPage({
     status: string;
     nextDue: string | null;
     cycleStart: string | null;
-    program: string;
-    level: string;
   }>();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -81,10 +70,6 @@ export default async function PaymentsPage({
     const gymnast = Array.isArray(charge.gymnasts)
       ? charge.gymnasts[0]
       : charge.gymnasts;
-    const level = Array.isArray(gymnast?.levels) ? gymnast?.levels[0] : gymnast?.levels;
-    const billing = Array.isArray(gymnast?.gymnast_billing_profiles)
-      ? gymnast?.gymnast_billing_profiles[0]
-      : gymnast?.gymnast_billing_profiles;
     const name = `${gymnast?.first_name ?? ""} ${gymnast?.last_name ?? ""}`.trim();
     const paid = charge.payment_allocations.reduce(
       (total, allocation) => total + Number(allocation.amount_cents),
@@ -99,8 +84,6 @@ export default async function PaymentsPage({
       status: gymnast?.status ?? "active",
       nextDue: null,
       cycleStart: null,
-      program: billing?.program ?? "Sin programa",
-      level: level?.name ?? "Sin nivel",
     };
     current.charged += Number(charge.amount_cents);
     current.paid += paid;
@@ -118,16 +101,8 @@ export default async function PaymentsPage({
 
   const normalizedQuery = q.trim().toLocaleLowerCase("es");
   const allRows = [...accounts.values()];
-  const availablePrograms = [...new Set(allRows.map((account) => account.program))]
-    .filter((value) => value !== "Sin programa")
-    .sort((a, b) => a.localeCompare(b, "es"));
-  const availableLevels = [...new Set(allRows.map((account) => account.level))]
-    .filter((value) => value !== "Sin nivel")
-    .sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
   const rows = allRows
     .filter((account) => account.name.toLocaleLowerCase("es").includes(normalizedQuery))
-    .filter((account) => !program || account.program === program)
-    .filter((account) => !levelFilter || account.level === levelFilter)
     .filter((account) => {
       const balance = account.charged - account.paid;
       if (view === "overdue") return account.overdue > 0;
@@ -146,10 +121,6 @@ export default async function PaymentsPage({
   const overdueTotal = allRows.reduce((total, account) => total + account.overdue, 0);
   const chargedTotal = allRows.reduce((total, account) => total + account.charged, 0);
   const paidTotal = allRows.reduce((total, account) => total + account.paid, 0);
-  const tagClass = (value: string, prefix: string) =>
-    `${prefix}-${value.normalize("NFD").replace(/\p{Diacritic}/gu, "")
-      .toLowerCase().replace(/\s+/g, "-")}`;
-
   return (
     <main className="module-page">
       <header className="module-header">
@@ -204,19 +175,10 @@ export default async function PaymentsPage({
           </article>
         </div>
 
-        <form className="search-form finance-filters" method="get">
+        <form className="search-form" method="get">
           <input name="q" defaultValue={q} placeholder="Buscar por nombre de la deportista" />
-          <select name="program" defaultValue={program} aria-label="Filtrar por programa">
-            <option value="">Todos los programas</option>
-            {availablePrograms.map((item) => <option value={item} key={item}>{item}</option>)}
-          </select>
-          <select name="level" defaultValue={levelFilter} aria-label="Filtrar por nivel">
-            <option value="">Todos los niveles</option>
-            {availableLevels.map((item) => <option value={item} key={item}>{item}</option>)}
-          </select>
           <input type="hidden" name="view" value={view} />
-          <button type="submit">Aplicar</button>
-          {(q || program || levelFilter) && <Link href={`/pagos?view=${view}`}>Limpiar</Link>}
+          <button type="submit">Buscar</button>
         </form>
 
         <nav className="payment-views" aria-label="Vistas de cartera">
@@ -229,19 +191,7 @@ export default async function PaymentsPage({
             ["paused", "Pausadas"],
             ["all", "Todas"],
           ].map(([key, label]) => (
-            <Link
-              className={view === key ? "active" : ""}
-              href={{
-                pathname: "/pagos",
-                query: {
-                  view: key,
-                  ...(q ? { q } : {}),
-                  ...(program ? { program } : {}),
-                  ...(levelFilter ? { level: levelFilter } : {}),
-                },
-              }}
-              key={key}
-            >
+            <Link className={view === key ? "active" : ""} href={`/pagos?view=${key}`} key={key}>
               {label}
             </Link>
           ))}
@@ -263,15 +213,13 @@ export default async function PaymentsPage({
             </div>
             <div className="finance-table">
               <div className="finance-row finance-head">
-                <span>Deportista</span><span>Programa</span><span>Nivel</span><span>Estado</span><span>Inicio</span><span>Vencimiento</span><span>Saldo</span>
+                <span>Deportista</span><span>Estado</span><span>Inicio</span><span>Vencimiento</span><span>Saldo</span>
               </div>
               {rows.map((account) => {
                 const balance = account.charged - account.paid;
                 return (
                   <Link href={`/pagos/${account.id}`} className="finance-row" key={account.id}>
                     <strong>{account.name}</strong>
-                    <span><i className={`notion-tag ${tagClass(account.program, "program")}`}>{account.program}</i></span>
-                    <span><i className={`notion-tag ${tagClass(account.level, "level")}`}>{account.level}</i></span>
                     <span className={`finance-status ${balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending"}`}>
                       {balance === 0 ? "Al día" : account.overdue > 0 ? "Vencido" : "Pendiente"}
                     </span>

@@ -2814,27 +2814,6 @@ nav {
   font: inherit;
 }
 
-.finance-filters {
-  align-items: stretch;
-}
-
-.finance-filters select {
-  min-width: 170px;
-  border: 1px solid #dfd6e6;
-  border-radius: 16px;
-  padding: 0 42px 0 16px;
-  color: #4f4455;
-  background: #fff;
-  font: inherit;
-}
-
-.finance-filters > a {
-  align-self: center;
-  color: #62269a;
-  font-weight: 750;
-  text-decoration: none;
-}
-
 .search-form button,
 .trial-card form button {
   border: 0;
@@ -2853,7 +2832,7 @@ nav {
 
 .finance-row {
   display: grid;
-  grid-template-columns: 1.55fr .9fr .85fr .8fr 1fr 1fr 1fr;
+  grid-template-columns: 1.6fr .9fr 1fr 1fr 1fr;
   align-items: center;
   gap: 18px;
   padding: 19px 26px;
@@ -3023,17 +3002,6 @@ a.finance-row:hover {
 
   .finance-row {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .finance-filters {
-    flex-direction: column;
-  }
-
-  .finance-filters input,
-  .finance-filters select,
-  .finance-filters button {
-    width: 100%;
-    min-height: 52px;
   }
 
   .inline-payment-form {
