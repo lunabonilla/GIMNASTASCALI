@@ -66,3 +66,73 @@ export async function createGroup(formData: FormData) {
   revalidatePath("/grupos");
   redirect("/grupos?created=1");
 }
+
+export async function enrollGymnast(formData: FormData) {
+  const groupId = value(formData, "group_id");
+  const gymnastId = value(formData, "gymnast_id");
+  if (!groupId || !gymnastId) {
+    redirect(`/grupos/${groupId}?error=Selecciona+una+gimnasta`);
+  }
+
+  const supabase = await createClient();
+  const [{ data: group }, { count }, { data: auth }] = await Promise.all([
+    supabase.from("training_groups").select("capacity").eq("id", groupId).single(),
+    supabase
+      .from("enrollments")
+      .select("*", { count: "exact", head: true })
+      .eq("group_id", groupId)
+      .eq("active", true),
+    supabase.auth.getClaims(),
+  ]);
+
+  if (!group) redirect("/grupos?error=Grupo+no+encontrado");
+  if ((count ?? 0) >= group.capacity) {
+    redirect(`/grupos/${groupId}?error=El+grupo+ya+alcanzó+su+cupo+máximo`);
+  }
+
+  const { error } = await supabase.from("enrollments").insert({
+    gymnast_id: gymnastId,
+    group_id: groupId,
+    starts_on: new Date().toISOString().slice(0, 10),
+    active: true,
+    created_by: auth?.claims?.sub ?? null,
+  });
+
+  if (error) {
+    const message =
+      error.code === "23505"
+        ? "La gimnasta ya pertenece a un grupo activo"
+        : "No pudimos asignar la gimnasta";
+    redirect(`/grupos/${groupId}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/grupos");
+  revalidatePath(`/grupos/${groupId}`);
+  redirect(`/grupos/${groupId}?assigned=1`);
+}
+
+export async function endEnrollment(formData: FormData) {
+  const groupId = value(formData, "group_id");
+  const enrollmentId = value(formData, "enrollment_id");
+  if (!groupId || !enrollmentId) redirect("/grupos");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("enrollments")
+    .update({
+      active: false,
+      ends_on: new Date().toISOString().slice(0, 10),
+    })
+    .eq("id", enrollmentId)
+    .eq("group_id", groupId);
+
+  if (error) {
+    redirect(`/grupos/${groupId}?error=No+pudimos+retirar+la+gimnasta`);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/grupos");
+  revalidatePath(`/grupos/${groupId}`);
+  redirect(`/grupos/${groupId}?removed=1`);
+}

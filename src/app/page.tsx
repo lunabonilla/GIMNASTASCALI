@@ -14,7 +14,7 @@ const navigation = [
   { label: "Clases de prueba", icon: "◇" },
   { label: "Gimnastas", icon: "○", href: "/gimnastas" },
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
-  { label: "Asistencia", icon: "✓" },
+  { label: "Asistencia", icon: "✓", href: "/asistencia" },
   { label: "Cartera y pagos", icon: "$" },
   { label: "Inventario", icon: "□" },
   { label: "Ventas", icon: "↗" },

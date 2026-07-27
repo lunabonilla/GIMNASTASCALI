@@ -86,7 +86,7 @@ export default async function GroupsPage({
                   </div>
                   <footer>
                     <span>{new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(group.monthly_fee_cents / 100)}<small> / mes</small></span>
-                    <button disabled>Administrar →</button>
+                    <Link href={`/grupos/${group.id}`}>Administrar →</Link>
                   </footer>
                 </article>
               );
