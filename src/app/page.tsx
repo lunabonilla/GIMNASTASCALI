@@ -16,8 +16,8 @@ const navigation = [
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓", href: "/asistencia" },
   { label: "Cartera y pagos", icon: "$", href: "/pagos" },
-  { label: "Inventario", icon: "□" },
-  { label: "Ventas", icon: "↗" },
+  { label: "Inventario", icon: "□", href: "/inventario" },
+  { label: "Ventas", icon: "↗", href: "/ventas" },
 ];
 
 const modules = [

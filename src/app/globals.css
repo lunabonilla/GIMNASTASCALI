@@ -667,6 +667,177 @@ th {
   }
 }
 
+.create-product-box {
+  background: #fff;
+  border: 1px solid #e4dbe9;
+  border-radius: 20px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.create-product-box summary {
+  color: #62269a;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.compact-form {
+  margin-top: 22px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.product-card {
+  background: #fff;
+  border: 1px solid #e6dfeb;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.product-card h2 {
+  margin: 7px 0;
+  color: #302635;
+}
+
+.product-card p {
+  color: #817789;
+  margin: 0;
+}
+
+.product-price {
+  display: block;
+  font-size: 22px;
+  margin: 20px 0;
+}
+
+.stock-count {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  border-radius: 14px;
+  background: #ecf8f1;
+  color: #2d6c4d;
+  padding: 14px;
+}
+
+.stock-count strong {
+  font-size: 24px;
+  grid-row: span 2;
+}
+
+.stock-count small {
+  font-weight: 700;
+}
+
+.stock-count.low {
+  color: #a3532d;
+  background: #fff0e7;
+}
+
+.stock-adjust {
+  margin-top: 16px;
+  color: #62269a;
+  font-weight: 700;
+}
+
+.stock-adjust form {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.stock-adjust input,
+.stock-adjust button,
+.sale-form input,
+.sale-form select {
+  border: 1px solid #ded5e4;
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+}
+
+.stock-adjust button {
+  color: #fff;
+  background: #62269a;
+}
+
+.sales-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, .8fr) minmax(400px, 1.5fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.sale-form,
+.sales-history {
+  background: #fff;
+  border: 1px solid #e5ddea;
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.sale-form {
+  display: grid;
+  gap: 15px;
+}
+
+.sale-form h2,
+.sales-history h2 {
+  margin-top: 0;
+}
+
+.sale-form label {
+  display: grid;
+  gap: 7px;
+  color: #665c6d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sales-history article {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 0;
+  border-top: 1px solid #eee8f1;
+}
+
+.sales-history article > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.sales-history article > div:last-child {
+  align-items: flex-end;
+}
+
+.sales-history span:not(.finance-status),
+.muted {
+  color: #857c8b;
+  font-size: 13px;
+}
+
+@media (max-width: 950px) {
+  .product-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sales-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .product-grid,
+  .inline-payment-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .attendance-group-list {
   display: grid;
   gap: 14px;
