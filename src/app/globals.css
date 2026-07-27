@@ -2219,7 +2219,7 @@ nav {
 }
 .finance-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
   margin-bottom: 24px;
 }
@@ -2463,5 +2463,11 @@ a.finance-row:hover {
 
   .inline-payment-form {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 851px) and (max-width: 1250px) {
+  .finance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

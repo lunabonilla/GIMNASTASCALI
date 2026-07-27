@@ -120,6 +120,7 @@ const cycles = cycleRaw
       due: end,
       amount: total,
       paid: Math.min(total, paid),
+      inferred: paid === 0 && defaultAmount > 0,
       notes,
     };
   })
@@ -316,6 +317,26 @@ where payments.external_source = 'notion'
 `;
 
 fs.writeFileSync(outputPath, migration);
+
+const inferredCycleIds = cycles
+  .filter((row) => row.inferred)
+  .map((row) => sql(row.source))
+  .join(",\n  ");
+const correctionPath = new URL(
+  "../supabase/migrations/20260726261000_remove_inferred_cycle_amounts.sql",
+  import.meta.url,
+);
+fs.writeFileSync(
+  correctionPath,
+  `-- Cycles without an explicit amount remain in notion_financial_archive,
+-- but must not affect real accounts receivable.
+delete from public.billing_charges
+where external_source = 'notion'
+  and external_id in (
+  ${inferredCycleIds}
+  );
+`,
+);
 console.log(JSON.stringify({
   movementRows: movements.length,
   cycleRows: cycles.length,
@@ -325,5 +346,6 @@ console.log(JSON.stringify({
   archivedRows: movementRaw.length + cycleRaw.length,
   chargedPesos: rows.reduce((total, row) => total + row.amount, 0),
   paidPesos: rows.reduce((total, row) => total + row.paid, 0),
+  inferredCyclesRemovedFromBalance: cycles.filter((row) => row.inferred).length,
   output: outputPath.pathname,
 }, null, 2));

@@ -42,7 +42,10 @@ export default async function PaymentsPage({
     gymnast_id: string;
     amount_cents: number;
     due_on: string;
-    gymnasts: Array<{ first_name: string; last_name: string }> | null;
+    gymnasts:
+      | { first_name: string; last_name: string }
+      | Array<{ first_name: string; last_name: string }>
+      | null;
     payment_allocations: Array<{ amount_cents: number }>;
   }>;
 
@@ -56,7 +59,10 @@ export default async function PaymentsPage({
   const today = new Date().toISOString().slice(0, 10);
 
   for (const charge of charges) {
-    const name = `${charge.gymnasts?.[0]?.first_name ?? ""} ${charge.gymnasts?.[0]?.last_name ?? ""}`.trim();
+    const gymnast = Array.isArray(charge.gymnasts)
+      ? charge.gymnasts[0]
+      : charge.gymnasts;
+    const name = `${gymnast?.first_name ?? ""} ${gymnast?.last_name ?? ""}`.trim();
     const paid = charge.payment_allocations.reduce(
       (total, allocation) => total + Number(allocation.amount_cents),
       0,
@@ -85,6 +91,8 @@ export default async function PaymentsPage({
     0,
   );
   const overdueTotal = rows.reduce((total, account) => total + account.overdue, 0);
+  const chargedTotal = rows.reduce((total, account) => total + account.charged, 0);
+  const paidTotal = rows.reduce((total, account) => total + account.paid, 0);
 
   return (
     <main className="module-page">
@@ -109,6 +117,16 @@ export default async function PaymentsPage({
           </div>
         )}
         <div className="finance-summary">
+          <article>
+            <span>Histórico cobrado</span>
+            <strong>{money(chargedTotal)}</strong>
+            <small>Suma de todos los cargos importados y nuevos</small>
+          </article>
+          <article>
+            <span>Histórico abonado</span>
+            <strong>{money(paidTotal)}</strong>
+            <small>Pagos aplicados a esos cargos</small>
+          </article>
           <article>
             <span>Cartera pendiente</span>
             <strong>{money(pendingTotal)}</strong>
