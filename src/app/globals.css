@@ -3236,6 +3236,71 @@ a.finance-row:hover {
 .matrix-status.double_class { color: #34658f; background: #deecfb; }
 .matrix-status.empty { color: #aaa1ae; }
 
+.collection-message-list {
+  display: grid;
+  gap: 18px;
+}
+
+.collection-message-card {
+  border: 1px solid #e4dce8;
+  border-radius: 20px;
+  background: #fff;
+  padding: 22px;
+}
+
+.collection-message-heading,
+.collection-message-card > div:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.collection-message-heading h2 {
+  display: inline-block;
+  margin: 0 0 14px 10px;
+}
+
+.collection-message-heading > strong {
+  color: var(--purple);
+  font-size: 24px;
+}
+
+.collection-message-card textarea {
+  width: 100%;
+  min-height: 190px;
+  border: 1px solid #e4dce8;
+  border-radius: 14px;
+  color: #463b4c;
+  background: #faf8fb;
+  padding: 16px;
+  font: inherit;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.collection-message-card > div:last-child {
+  margin-top: 12px;
+  color: #827889;
+}
+
+.copy-message-button {
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--purple);
+  padding: 11px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message-template-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(340px, .6fr);
+  gap: 24px;
+  align-items: start;
+}
+
 .charge-main p {
   margin: 0;
   color: #817788;
@@ -3350,6 +3415,10 @@ a.finance-row:hover {
   }
 
   .preparation-roll-row {
+    grid-template-columns: 1fr;
+  }
+
+  .message-template-layout {
     grid-template-columns: 1fr;
   }
 }

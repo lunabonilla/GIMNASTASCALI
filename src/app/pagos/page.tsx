@@ -131,6 +131,7 @@ export default async function PaymentsPage({
           <p>Consulta saldos, crea cobros y registra abonos por deportista.</p>
         </div>
         <div className="header-actions">
+          <Link href="/pagos/mensajes" className="secondary-button">Copiar mensajes de cobro</Link>
           <Link href="/pagos/frecuencias" className="secondary-button">Configurar frecuencias</Link>
           <Link href="/pagos/tarifas" className="secondary-button">Ver tarifas 2026</Link>
           <Link href="/pagos/nuevo" className="primary-button">＋ Nuevo cargo</Link>

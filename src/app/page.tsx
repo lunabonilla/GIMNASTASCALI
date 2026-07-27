@@ -16,6 +16,7 @@ const navigation = [
   { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
   { label: "Asistencia", icon: "✓", href: "/asistencia" },
   { label: "Programas de preparación", icon: "★", href: "/programas-preparacion" },
+  { label: "Competencias", icon: "🏆", href: "/competencias" },
   { label: "Cartera y pagos", icon: "$", href: "/pagos" },
   { label: "Inventario", icon: "□", href: "/inventario" },
   { label: "Ventas", icon: "↗", href: "/ventas" },
