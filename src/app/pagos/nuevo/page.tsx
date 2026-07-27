@@ -27,13 +27,62 @@ export default async function NewChargePage({
   return (
     <main className="form-page">
       <div className="form-card wide-form">
+        <style>{`
+          .charge-entry-form {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 22px !important;
+            margin-top: 30px !important;
+          }
+          .charge-entry-form > label {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            color: #514957 !important;
+            font-size: 13px !important;
+            font-weight: 750 !important;
+          }
+          .charge-entry-form > label.full-field,
+          .charge-entry-form > .form-actions {
+            grid-column: 1 / -1 !important;
+          }
+          .charge-entry-form input,
+          .charge-entry-form select,
+          .charge-entry-form textarea {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 48px !important;
+            border: 1px solid #dcd5e2 !important;
+            border-radius: 12px !important;
+            color: #241c2d !important;
+            background: #fff !important;
+            padding: 12px 14px !important;
+            font: inherit !important;
+            font-weight: 400 !important;
+          }
+          .charge-entry-form textarea {
+            min-height: 110px !important;
+            resize: vertical !important;
+          }
+          @media (max-width: 700px) {
+            .charge-entry-form {
+              grid-template-columns: 1fr !important;
+            }
+            .charge-entry-form > label.full-field,
+            .charge-entry-form > .form-actions {
+              grid-column: auto !important;
+            }
+          }
+        `}</style>
         <Link href="/pagos" className="back-link">← Volver a cartera</Link>
         <p className="eyebrow">Nuevo movimiento</p>
         <h1>Crear un cargo</h1>
         <p>Registra una mensualidad, producto, clase adicional u otro cobro.</p>
         {messages.error && <div className="error-banner">{messages.error}</div>}
 
-        <form action={createCharge} className="club-form">
+        <form action={createCharge} className="club-form charge-entry-form">
           <label className="full-field">
             Deportista *
             <select name="gymnast_id" required defaultValue={messages.gymnast ?? ""}>
