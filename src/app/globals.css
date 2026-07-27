@@ -667,6 +667,80 @@ th {
   }
 }
 
+.frequency-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 18px;
+  background: #f3eafa;
+  color: #674477;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.frequency-summary strong {
+  font-size: 26px;
+}
+
+.frequency-summary a {
+  color: #62269a;
+  font-weight: 800;
+  margin-left: auto;
+  text-decoration: none;
+}
+
+.frequency-list {
+  background: #fff;
+  border: 1px solid #e5ddea;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.frequency-list form {
+  display: grid;
+  grid-template-columns: 1fr 240px auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-top: 1px solid #eee8f1;
+}
+
+.frequency-list form:first-child {
+  border-top: 0;
+}
+
+.frequency-list form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.frequency-list form span {
+  color: #83798a;
+  font-size: 13px;
+}
+
+.frequency-list select,
+.frequency-list button {
+  border: 1px solid #ded5e4;
+  border-radius: 11px;
+  padding: 11px 13px;
+  font: inherit;
+}
+
+.frequency-list button {
+  border: 0;
+  color: #fff;
+  background: #62269a;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .frequency-list form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .create-product-box {
   background: #fff;
   border: 1px solid #e4dbe9;
