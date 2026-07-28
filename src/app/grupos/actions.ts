@@ -247,6 +247,51 @@ export async function deleteGroup(formData: FormData) {
   redirect("/grupos?deleted=1");
 }
 
+export async function permanentlyDeleteGroup(formData: FormData) {
+  const groupId = value(formData, "group_id");
+  const confirmed = formData.get("confirm_permanent") === "on";
+  if (!groupId || !confirmed) {
+    redirect(`/grupos/${groupId}?error=Confirma+que+deseas+eliminarlo+definitivamente`);
+  }
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("staff_profiles")
+    .select("role, active")
+    .single();
+  if (!profile?.active || profile.role !== "superadmin") {
+    redirect(`/grupos/${groupId}?error=Solo+la+administradora+principal+puede+eliminar+definitivamente`);
+  }
+
+  const { error: sessionsError } = await supabase
+    .from("class_sessions")
+    .delete()
+    .eq("group_id", groupId);
+  if (sessionsError) {
+    redirect(`/grupos/${groupId}?error=No+pudimos+eliminar+las+asistencias+del+grupo`);
+  }
+
+  const { error: enrollmentsError } = await supabase
+    .from("enrollments")
+    .delete()
+    .eq("group_id", groupId);
+  if (enrollmentsError) {
+    redirect(`/grupos/${groupId}?error=No+pudimos+eliminar+las+asignaciones+del+grupo`);
+  }
+
+  const { error } = await supabase
+    .from("training_groups")
+    .delete()
+    .eq("id", groupId);
+  if (error) redirect(`/grupos/${groupId}?error=No+pudimos+eliminar+definitivamente+el+grupo`);
+
+  revalidatePath("/");
+  revalidatePath("/grupos");
+  revalidatePath("/asistencia");
+  revalidatePath("/horarios-profesores");
+  redirect("/grupos?permanently_deleted=1");
+}
+
 export async function enrollGymnast(formData: FormData) {
   const groupId = value(formData, "group_id");
   const gymnastId = value(formData, "gymnast_id");

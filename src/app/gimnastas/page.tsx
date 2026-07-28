@@ -143,7 +143,12 @@ export default async function GymnastsPage({
           </div>
         )}
 
-        <form className="search-bar filter-bar">
+        <form
+          className="search-bar filter-bar"
+          method="get"
+          action="/gimnastas"
+          id="gymnast-filters"
+        >
           <input
             type="search"
             name="q"
@@ -163,7 +168,7 @@ export default async function GymnastsPage({
               <option value={item.id} key={item.id}>{item.name}</option>
             ))}
           </select>
-          <button type="submit">Aplicar</button>
+          <button type="submit" form="gymnast-filters">Aplicar filtros</button>
           {(q || status !== "active" || level) && (
             <Link href="/gimnastas">Limpiar</Link>
           )}
@@ -174,6 +179,22 @@ export default async function GymnastsPage({
             <div>
               <span className="section-kicker">Directorio</span>
               <h2>{gymnasts.length} gimnastas</h2>
+              {(q || status !== "active" || level) && (
+                <p className="filter-result">
+                  <strong>Filtro aplicado:</strong>{" "}
+                  {status === "suspended"
+                    ? "Pausadas"
+                    : status === "retired"
+                      ? "Retiradas"
+                      : status === "all"
+                        ? "Todos los estados"
+                        : "Activas"}
+                  {level
+                    ? ` · ${levels.find((item) => item.id === level)?.name ?? "Nivel seleccionado"}`
+                    : ""}
+                  {q ? ` · búsqueda “${q}”` : ""}
+                </p>
+              )}
             </div>
           </div>
 

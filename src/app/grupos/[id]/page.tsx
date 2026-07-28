@@ -5,6 +5,7 @@ import {
   deleteGroup,
   endEnrollment,
   enrollGymnast,
+  permanentlyDeleteGroup,
   updateEnrollmentStatus,
 } from "../actions";
 
@@ -255,6 +256,22 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
           <form action={deleteGroup}>
             <input type="hidden" name="group_id" value={detail.id} />
             <button type="submit">Eliminar grupo</button>
+          </form>
+        </section>
+
+        <section className="permanent-delete-zone">
+          <div>
+            <span className="section-kicker">Solo para pruebas o errores</span>
+            <h2>Eliminar definitivamente</h2>
+            <p>Elimina horarios, asignaciones y asistencias del grupo. No borra las fichas de las gimnastas.</p>
+          </div>
+          <form action={permanentlyDeleteGroup}>
+            <input type="hidden" name="group_id" value={detail.id} />
+            <label>
+              <input type="checkbox" name="confirm_permanent" required />
+              Entiendo que no se puede recuperar
+            </label>
+            <button type="submit">Eliminar definitivamente</button>
           </form>
         </section>
       </section>

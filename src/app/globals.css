@@ -131,6 +131,15 @@ body {
   min-width: 150px;
 }
 
+.filter-result {
+  margin: 8px 0 0;
+  border-radius: 8px;
+  color: #654579;
+  background: #f1e8f6;
+  font-size: 10px;
+  padding: 7px 10px;
+}
+
 .search-bar input:focus,
 .gymnast-form input:focus,
 .gymnast-form select:focus {
@@ -1784,6 +1793,59 @@ th {
   padding: 0 16px;
 }
 
+.permanent-delete-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-top: 18px;
+  border: 1px solid #e5aaaa;
+  border-radius: 16px;
+  background: #fff5f5;
+  padding: 20px;
+}
+
+.permanent-delete-zone h2,
+.permanent-delete-zone p {
+  margin: 5px 0 0;
+}
+
+.permanent-delete-zone p {
+  max-width: 620px;
+  color: #856f73;
+  font-size: 11px;
+}
+
+.permanent-delete-zone form {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.permanent-delete-zone label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8f4141;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.permanent-delete-zone label input {
+  width: auto;
+}
+
+.permanent-delete-zone button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  color: white;
+  background: #a83d3d;
+  font-weight: 850;
+  padding: 0 14px;
+}
+
 .checkbox-field {
   display: flex !important;
   flex-direction: row !important;
@@ -2003,6 +2065,15 @@ th {
 
   .danger-zone button {
     width: 100%;
+  }
+
+  .permanent-delete-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .permanent-delete-zone form {
+    align-items: stretch;
   }
 }
 
