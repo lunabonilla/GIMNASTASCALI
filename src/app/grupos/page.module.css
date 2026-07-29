@@ -1,14 +1,20 @@
 .dayTabs {
   display: flex;
+  flex: none;
+  flex-direction: row;
+  align-items: stretch;
   overflow-x: auto;
   gap: 7px;
   margin-bottom: 22px;
   padding-bottom: 3px;
+  scrollbar-width: thin;
 }
 
 .dayTabs a {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: 1px solid #e2dbe6;
   border-radius: 10px;
@@ -207,6 +213,15 @@
 }
 
 @media (max-width: 620px) {
+  .dayTabs {
+    margin-right: -24px;
+    padding-right: 24px;
+  }
+
+  .dayTabs a {
+    min-width: 92px;
+  }
+
   .boardHeading {
     align-items: flex-start;
     flex-direction: column;

@@ -6,6 +6,7 @@ import { enrollGymnast } from "../actions";
 type GymnastOption = {
   id: string;
   name: string;
+  status: "active" | "suspended";
 };
 
 const normalize = (value: string) =>
@@ -62,7 +63,10 @@ export function GymnastPicker({
               }}
             >
               <i>{gymnast.name.charAt(0)}</i>
-              <span>{gymnast.name}</span>
+              <span>
+                {gymnast.name}
+                {gymnast.status === "suspended" && <small>Pausada</small>}
+              </span>
             </button>
           )) : <p>No encontramos una gimnasta con ese nombre.</p>}
         </div>
@@ -74,4 +78,3 @@ export function GymnastPicker({
     </form>
   );
 }
-

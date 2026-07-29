@@ -761,6 +761,18 @@ th {
   background: #faf7fc;
 }
 
+.group-gymnast-results button > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group-gymnast-results button small {
+  color: #a44949;
+  font-size: 8px;
+  font-weight: 800;
+}
+
 .group-gymnast-results i {
   display: grid;
   width: 27px;

@@ -300,7 +300,7 @@ export async function enrollGymnast(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const [{ data: group }, { count }, { data: auth }] = await Promise.all([
+  const [{ data: group }, { count }, { data: auth }, { data: gymnast }] = await Promise.all([
     supabase
       .from("training_groups")
       .select("capacity, billing_program, group_schedule_slots(weekday)")
@@ -312,9 +312,17 @@ export async function enrollGymnast(formData: FormData) {
       .eq("group_id", groupId)
       .eq("active", true),
     supabase.auth.getClaims(),
+    supabase
+      .from("gymnasts")
+      .select("status")
+      .eq("id", gymnastId)
+      .single(),
   ]);
 
   if (!group) redirect("/grupos?error=Grupo+no+encontrado");
+  if (!gymnast || gymnast.status === "retired") {
+    redirect(`/grupos/${groupId}?error=La+gimnasta+no+está+disponible+para+un+grupo`);
+  }
   if ((count ?? 0) >= group.capacity) {
     redirect(`/grupos/${groupId}?error=El+grupo+ya+alcanzó+su+cupo+máximo`);
   }
@@ -324,6 +332,7 @@ export async function enrollGymnast(formData: FormData) {
     group_id: groupId,
     starts_on: new Date().toISOString().slice(0, 10),
     active: true,
+    participation_status: gymnast.status === "suspended" ? "paused" : "active",
     created_by: auth?.claims?.sub ?? null,
   });
 

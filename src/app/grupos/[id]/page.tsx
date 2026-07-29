@@ -52,8 +52,8 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
       .order("created_at"),
     supabase
       .from("gymnasts")
-      .select("id, first_name, last_name")
-      .eq("status", "active")
+      .select("id, first_name, last_name, status")
+      .neq("status", "retired")
       .order("first_name"),
   ]);
 
@@ -103,6 +103,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
     id: string;
     first_name: string;
     last_name: string;
+    status: "active" | "suspended";
   }>).filter((gymnast) => !enrolledIds.has(gymnast.id));
   const full = enrollments.length >= detail.capacity;
   const detailLevel = Array.isArray(detail.levels) ? detail.levels[0] : detail.levels;
@@ -221,6 +222,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
                   gymnasts={availableGymnasts.map((gymnast) => ({
                     id: gymnast.id,
                     name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+                    status: gymnast.status,
                   }))}
                 />
               )}
