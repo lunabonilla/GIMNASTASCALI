@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateGroup } from "../../actions";
+import { ProgramDurationSelect } from "../../program-duration-select";
 
 const days = [
   [1, "Lunes"], [2, "Martes"], [3, "Miércoles"],
@@ -51,7 +52,7 @@ export default async function EditGroupPage({
             <legend>Información del grupo</legend>
             <div className="form-grid">
               <label>Nombre del grupo *<input name="name" required defaultValue={group.name} /></label>
-              <label>Programa *<select name="billing_program" defaultValue={group.billing_program ?? "Regular"}><option value="Minis">Minis · clases de 1 hora</option><option value="Regular">Regular · clases de 1,5 horas</option><option value="Intensivo">Integral / Intensivo</option></select></label>
+              <label>Programa *<ProgramDurationSelect defaultValue={group.billing_program ?? "Regular"} /></label>
               <label>Nivel<select name="level_id" defaultValue={group.level_id ?? ""}><option value="">Sin asignar</option>{(levelsData ?? []).map((level) => <option value={level.id} key={level.id}>{level.name}</option>)}</select></label>
               <label>Profesora<select name="coach_profile_id" defaultValue={group.coach_profile_id ?? ""}><option value="">Sin asignar</option>{(staffData ?? []).map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</select></label>
               <label>Cupos *<input name="capacity" type="number" min="1" defaultValue={group.capacity} required /></label>

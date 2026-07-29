@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createGroup } from "../actions";
+import { ProgramDurationSelect } from "../program-duration-select";
 
 export default async function NewGroupPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const supabase = await createClient();
@@ -31,7 +32,7 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
             <legend>Información del grupo</legend>
             <div className="form-grid">
               <label>Nombre del grupo *<input name="name" required placeholder="Ej. Nivel 1 - Tarde" /></label>
-              <label>Programa *<select name="billing_program" defaultValue="Regular"><option value="Minis">Minis · clases de 1 hora</option><option value="Regular">Regular · clases de 1,5 horas</option><option value="Intensivo">Integral / Intensivo</option></select></label>
+              <label>Programa *<ProgramDurationSelect defaultValue="Regular" /></label>
               <label>Nivel<select name="level_id" defaultValue=""><option value="">Sin asignar</option>{levels.map((level) => <option value={level.id} key={level.id}>{level.name}</option>)}</select></label>
               <label>Profesora<select name="coach_profile_id" defaultValue=""><option value="">Sin asignar</option>{staff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</select></label>
               <label>Cupos *<input name="capacity" type="number" min="1" defaultValue="12" required /></label>
@@ -58,7 +59,7 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
                 </div>
               </div>
               <label>Hora de inicio *<input name="starts_at" type="time" required /></label>
-              <label>Hora de finalización *<input name="ends_at" type="time" required /></label>
+              <label>Hora de finalización *<input name="ends_at" type="time" required /><small>Se calcula automáticamente según el programa y puedes ajustarla.</small></label>
             </div>
           </fieldset>
           <div className="form-actions">
