@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateGroup } from "../../actions";
 
@@ -30,7 +30,7 @@ export default async function EditGroupPage({
     supabase.from("levels").select("id, name").eq("active", true).order("sort_order"),
     supabase.from("staff_profiles").select("id, full_name").eq("active", true).order("full_name"),
   ]);
-  if (!group) notFound();
+  if (!group) redirect("/grupos?missing=1");
 
   const slots = group.group_schedule_slots ?? [];
   const slotsByDay = new Map(slots.map((slot) => [slot.weekday, slot]));

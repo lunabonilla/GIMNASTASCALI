@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
 import {
@@ -57,7 +57,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
       .order("first_name"),
   ]);
 
-  if (!group) notFound();
+  if (!group) redirect("/grupos?missing=1");
 
   const detail = group as {
     id: string;

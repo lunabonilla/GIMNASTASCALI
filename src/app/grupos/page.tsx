@@ -45,6 +45,7 @@ export default async function GroupsPage({
     deleted?: string;
     archived?: string;
     permanently_deleted?: string;
+    missing?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -104,6 +105,7 @@ export default async function GroupsPage({
         {params.deleted && <div className="success-banner">✓ Grupo vacío eliminado definitivamente.</div>}
         {params.permanently_deleted && <div className="success-banner">✓ Grupo eliminado definitivamente.</div>}
         {params.archived && <div className="success-banner">✓ Grupo desactivado; su historial quedó protegido.</div>}
+        {params.missing && <div className="info-banner">Ese grupo ya no existe. Te devolvimos al listado de horarios.</div>}
 
         <nav className={styles.dayTabs} aria-label="Días de la semana">
           {days.map(([day, label]) => (
