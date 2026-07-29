@@ -4,10 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import {
   deleteGroup,
   endEnrollment,
-  enrollGymnast,
   permanentlyDeleteGroup,
   updateEnrollmentStatus,
 } from "../actions";
+import { GymnastPicker } from "./gymnast-picker";
 
 const dayNames: Record<number, string> = {
   1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves",
@@ -215,21 +215,13 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
               {full ? (
                 <div className="capacity-warning">El grupo alcanzó su capacidad máxima.</div>
               ) : (
-                <form action={enrollGymnast}>
-                  <input type="hidden" name="group_id" value={detail.id} />
-                  <label>
-                    Gimnasta activa
-                    <select name="gymnast_id" required defaultValue="">
-                      <option value="" disabled>Seleccionar gimnasta</option>
-                      {availableGymnasts.map((gymnast) => (
-                        <option value={gymnast.id} key={gymnast.id}>
-                          {gymnast.first_name} {gymnast.last_name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button type="submit" className="primary-button">Asignar al grupo</button>
-                </form>
+                <GymnastPicker
+                  groupId={detail.id}
+                  gymnasts={availableGymnasts.map((gymnast) => ({
+                    id: gymnast.id,
+                    name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+                  }))}
+                />
               )}
             </section>
 
