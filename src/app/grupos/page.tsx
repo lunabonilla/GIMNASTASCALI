@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatClubTime } from "@/lib/format";
 import styles from "./page.module.css";
 
 const days = [
@@ -152,7 +153,7 @@ export default async function GroupsPage({
                 <article className={`${styles.groupNote} ${!group.active ? styles.inactiveGroup : ""}`} key={`${group.id}-${slot.id}`}>
                   <div className={styles.noteTop}>
                     <div>
-                      <strong>{slot.starts_at.slice(0, 5)}–{slot.ends_at.slice(0, 5)}</strong>
+                      <strong>{formatClubTime(slot.starts_at)}–{formatClubTime(slot.ends_at)}</strong>
                       <span>{level?.name ?? group.billing_program ?? "Sin nivel"}</span>
                     </div>
                     <small>{enrollments.length}/{group.capacity}</small>

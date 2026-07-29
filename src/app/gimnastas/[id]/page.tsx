@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatClubTime } from "@/lib/format";
 import { updateGymnast } from "../actions";
 
 type PageProps = {
@@ -167,7 +168,7 @@ export default async function GymnastProfilePage({ params, searchParams }: PageP
               {(group?.group_schedule_slots ?? []).map((slot) => (
                 <div className="profile-schedule" key={`${slot.weekday}-${slot.starts_at}`}>
                   <strong>{dayNames[slot.weekday]}</strong>
-                  <span>{slot.starts_at.slice(0, 5)} – {slot.ends_at.slice(0, 5)}</span>
+                  <span>{formatClubTime(slot.starts_at)} – {formatClubTime(slot.ends_at)}</span>
                   <small>{slot.location || "Sede principal"}</small>
                 </div>
               ))}

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatClubTime } from "@/lib/format";
 import styles from "./page.module.css";
 
 type StaffProfile = {
@@ -372,7 +373,7 @@ export default async function Home() {
                       : coachRelation;
                     return (
                       <Link href={`/asistencia/${group?.id}`} className={styles.scheduleRow} key={slot.id}>
-                        <span className={styles.scheduleTime}>{slot.starts_at.slice(0, 5)}</span>
+                        <span className={styles.scheduleTime}>{formatClubTime(slot.starts_at)}</span>
                         <span>
                           <strong>{group?.name}</strong>
                           <small>

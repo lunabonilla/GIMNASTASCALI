@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatClubTime } from "@/lib/format";
 import { saveDailyAssignment } from "./actions";
 import styles from "./page.module.css";
 
@@ -135,7 +136,7 @@ export default async function StaffSchedulePage({
                     const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
                     return (
                       <div className={styles.teacherSlot} key={slot.id}>
-                        <strong>{slot.starts_at.slice(0, 5)}–{slot.ends_at.slice(0, 5)}</strong>
+                        <strong>{formatClubTime(slot.starts_at)}–{formatClubTime(slot.ends_at)}</strong>
                         <span>{group?.name}</span>
                         <small>{slot.location || "Sede principal"}</small>
                       </div>
@@ -165,8 +166,8 @@ export default async function StaffSchedulePage({
                   <input type="hidden" name="group_id" value={slot.group_id} />
                   <input type="hidden" name="schedule_slot_id" value={slot.id} />
                   <div className={styles.time}>
-                    <strong>{slot.starts_at.slice(0, 5)}</strong>
-                    <small>{slot.ends_at.slice(0, 5)}</small>
+                    <strong>{formatClubTime(slot.starts_at)}</strong>
+                    <small>{formatClubTime(slot.ends_at)}</small>
                   </div>
                   <div className={styles.group}>
                     <strong>{group?.name}</strong>
@@ -198,4 +199,3 @@ export default async function StaffSchedulePage({
     </main>
   );
 }
-
