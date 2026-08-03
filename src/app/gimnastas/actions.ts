@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { parse } from "csv-parse/sync";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentStaffProfile } from "@/lib/current-staff";
 
 export async function createGymnast(formData: FormData) {
   const value = (name: string) => String(formData.get(name) ?? "").trim();
@@ -55,10 +56,7 @@ export async function updateGymnast(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: staff } = await supabase
-    .from("staff_profiles")
-    .select("role, active")
-    .single();
+  const staff = await getCurrentStaffProfile();
   if (!staff?.active || staff.role !== "superadmin") {
     redirect(`/gimnastas/${gymnastId}?error=No+tienes+permiso+para+editar`);
   }
@@ -205,10 +203,7 @@ export async function importGymnasts(formData: FormData) {
   });
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("staff_profiles")
-    .select("role, active")
-    .single();
+  const profile = await getCurrentStaffProfile();
 
   if (!profile?.active || profile.role !== "superadmin") {
     redirect("/gimnastas/importar?error=No+tienes+permiso+para+importar");

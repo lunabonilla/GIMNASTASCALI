@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentStaffProfile } from "@/lib/current-staff";
 
 const text = (formData: FormData, name: string) =>
   String(formData.get(name) ?? "").trim();
@@ -20,8 +21,8 @@ export async function saveDailyAssignment(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const [{ data: profile }, { data: slot }] = await Promise.all([
-    supabase.from("staff_profiles").select("role, active").single(),
+  const [profile, { data: slot }] = await Promise.all([
+    getCurrentStaffProfile(),
     supabase
       .from("group_schedule_slots")
       .select("id, group_id")
@@ -53,4 +54,3 @@ export async function saveDailyAssignment(formData: FormData) {
   revalidatePath("/");
   redirect(`${returnUrl}&saved=1`);
 }
-

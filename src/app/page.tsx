@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
+import { getCurrentStaffProfile } from "@/lib/current-staff";
 import styles from "./page.module.css";
 
 type StaffProfile = {
@@ -22,6 +23,7 @@ const navigation = [
       { label: "Gimnastas", icon: "○", href: "/gimnastas" },
       { label: "Grupos y horarios", icon: "▦", href: "/grupos" },
       { label: "Jornada de profesores", icon: "◷", href: "/horarios-profesores" },
+      { label: "Profesores", icon: "◎", href: "/profesores" },
       { label: "Asistencia", icon: "✓", href: "/asistencia" },
       { label: "Clases de prueba", icon: "◇", href: "/pruebas" },
     ],
@@ -88,11 +90,7 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const { data: profileData } = await supabase
-    .from("staff_profiles")
-    .select("full_name, role, active")
-    .single();
-  const profile = profileData as StaffProfile | null;
+  const profile = await getCurrentStaffProfile() as StaffProfile | null;
 
   if (!profile?.active) {
     redirect("/login?error=Tu+usuario+no+tiene+acceso+activo");

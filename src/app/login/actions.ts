@@ -12,7 +12,7 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     redirect("/login?error=Correo+o+contraseña+incorrectos");
@@ -21,7 +21,8 @@ export async function login(formData: FormData) {
   const { data: profile } = await supabase
     .from("staff_profiles")
     .select("active")
-    .single();
+    .eq("id", signIn.user.id)
+    .maybeSingle();
 
   if (!profile?.active) {
     await supabase.auth.signOut();

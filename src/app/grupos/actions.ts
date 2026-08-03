@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentStaffProfile } from "@/lib/current-staff";
 
 const value = (formData: FormData, name: string) =>
   String(formData.get(name) ?? "").trim();
@@ -37,10 +38,7 @@ export async function createGroup(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("staff_profiles")
-    .select("role, active")
-    .single();
+  const profile = await getCurrentStaffProfile();
   if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
     redirect("/grupos/nuevo?error=No+tienes+permiso+para+crear+grupos");
   }
@@ -133,8 +131,8 @@ export async function updateGroup(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const [{ data: profile }, { count: occupied }] = await Promise.all([
-    supabase.from("staff_profiles").select("role, active").single(),
+  const [profile, { count: occupied }] = await Promise.all([
+    getCurrentStaffProfile(),
     supabase
       .from("enrollments")
       .select("*", { count: "exact", head: true })
@@ -209,9 +207,9 @@ export async function deleteGroup(formData: FormData) {
   if (!groupId) redirect("/grupos");
 
   const supabase = await createClient();
-  const [{ data: profile }, { count: enrollments }, { count: sessions }] =
+  const [profile, { count: enrollments }, { count: sessions }] =
     await Promise.all([
-      supabase.from("staff_profiles").select("role, active").single(),
+      getCurrentStaffProfile(),
       supabase
         .from("enrollments")
         .select("*", { count: "exact", head: true })
@@ -255,10 +253,7 @@ export async function permanentlyDeleteGroup(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("staff_profiles")
-    .select("role, active")
-    .single();
+  const profile = await getCurrentStaffProfile();
   if (!profile?.active || profile.role !== "superadmin") {
     redirect(`/grupos/${groupId}?error=Solo+la+administradora+principal+puede+eliminar+definitivamente`);
   }
@@ -403,10 +398,7 @@ export async function updateEnrollmentStatus(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("staff_profiles")
-    .select("role, active")
-    .single();
+  const profile = await getCurrentStaffProfile();
   if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
     redirect(`/grupos/${groupId}?error=No+tienes+permiso+para+cambiar+el+estado`);
   }
