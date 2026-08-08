@@ -139,7 +139,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
             <div className="data-panel-heading">
               <span className="section-kicker">Deportistas</span>
               <h2>Integrantes del grupo</h2>
-              <nav className="member-filters" aria-label="Filtrar integrantes">
+              <div className="member-filters" role="navigation" aria-label="Filtrar integrantes">
                 {[
                   ["all", "Todas"],
                   ["active", "Entrenando"],
@@ -157,7 +157,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
                     <span>{key === "all" ? enrollments.length : enrollments.filter((item) => item.participation_status === key).length}</span>
                   </Link>
                 ))}
-              </nav>
+              </div>
             </div>
             {visibleEnrollments.length === 0 ? (
               <div className="compact-empty">
