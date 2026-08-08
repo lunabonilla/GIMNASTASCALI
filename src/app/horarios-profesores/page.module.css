@@ -56,6 +56,21 @@
   margin: 22px 0 12px;
 }
 
+.autoOrganizer { margin-top: 15px; border: 1px solid #ddcde8; border-radius: 15px; background: #fbf8fd; }
+.autoOrganizer summary { display: flex; align-items: center; justify-content: space-between; gap: 15px; cursor: pointer; padding: 15px 18px; list-style: none; }
+.autoOrganizer summary > div { display: grid; gap: 3px; }
+.autoOrganizer summary strong { color: #5f268b; font-size: 13px; }
+.autoOrganizer summary span, .autoOrganizer summary b { color: #8b8090; font-size: 9px; }
+.autoOrganizer form { display: grid; gap: 13px; border-top: 1px solid #e8dfed; padding: 17px; }
+.autoOrganizer form p { margin: 0; font-size: 11px; font-weight: 800; }
+.absentPicker { display: flex; flex-wrap: wrap; gap: 7px; }
+.absentPicker label { position: relative; }
+.absentPicker input { position: absolute; opacity: 0; }
+.absentPicker span { display: block; border: 1px solid #ded5e4; border-radius: 999px; background: white; padding: 7px 10px; color: #6f6575; font-size: 9px; font-weight: 800; cursor: pointer; }
+.absentPicker input:checked + span { border-color: #d56d75; color: #a83e47; background: #fff0f1; }
+.autoOrganizer form small { color: #877d8b; font-size: 9px; }
+.autoOrganizer form button { width: fit-content; border: 0; border-radius: 10px; background: #64278f; color: white; padding: 11px 15px; font-size: 10px; font-weight: 850; }
+
 .viewTabs a {
   border-radius: 9px;
   color: #776e7b;
@@ -80,7 +95,7 @@
 .listHead,
 .scheduleRow {
   display: grid;
-  grid-template-columns: 80px minmax(170px, 1fr) minmax(190px, 1.1fr) minmax(190px, 1.1fr) 85px;
+  grid-template-columns: 70px minmax(145px, .9fr) minmax(165px, 1fr) minmax(165px, 1fr) minmax(170px, 1fr) 78px;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
@@ -258,4 +273,3 @@
     grid-template-columns: 1fr;
   }
 }
-

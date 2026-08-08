@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
-import { saveDailyAssignment } from "./actions";
+import { autoOrganizeDay, saveDailyAssignment } from "./actions";
 import styles from "./page.module.css";
 
 const isoToday = () => {
@@ -27,7 +27,7 @@ const dateLabel = (date: string) =>
 export default async function StaffSchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; saved?: string; error?: string; view?: string }>;
+  searchParams: Promise<{ date?: string; saved?: string; organized?: string; error?: string; view?: string }>;
 }) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
@@ -43,6 +43,7 @@ export default async function StaffSchedulePage({
     { data: slotsData },
     { data: staffData },
     { data: assignmentsData },
+    { data: capabilitiesData },
   ] = await Promise.all([
     supabase
       .from("group_schedule_slots")
@@ -56,8 +57,11 @@ export default async function StaffSchedulePage({
       .order("full_name"),
     supabase
       .from("daily_staff_assignments")
-      .select("id, schedule_slot_id, coach_profile_id, notes")
+      .select("id, schedule_slot_id, coach_profile_id, assistant_profile_id, notes")
       .eq("work_date", selectedDate),
+    supabase
+      .from("staff_coaching_capabilities")
+      .select("staff_profile_id, level_name, assignment_role, requires_support"),
   ]);
 
   const staff = staffData ?? [];
@@ -65,6 +69,13 @@ export default async function StaffSchedulePage({
   const assignments = new Map(
     (assignmentsData ?? []).map((assignment) => [assignment.schedule_slot_id, assignment]),
   );
+  const capabilities = capabilitiesData ?? [];
+  const recommendedFor = (levelName: string, role: "lead" | "support") =>
+    new Set(
+      capabilities
+        .filter((item) => item.level_name === levelName && item.assignment_role === role)
+        .map((item) => item.staff_profile_id),
+    );
   const slots = (slotsData ?? []).filter((slot) => {
     const group = Array.isArray(slot.training_groups)
       ? slot.training_groups[0]
@@ -85,6 +96,7 @@ export default async function StaffSchedulePage({
 
       <section className="module-content">
         {query.saved && <div className="success-banner">✓ Asignación de la jornada guardada.</div>}
+        {query.organized && <div className="success-banner">✓ Jornada reorganizada. Puedes ajustar cualquier grupo manualmente.</div>}
         {query.error && <div className="error-banner">{query.error}</div>}
 
         <section className={styles.dayControl}>
@@ -100,6 +112,24 @@ export default async function StaffSchedulePage({
             <button type="submit">Ver jornada</button>
           </form>
         </section>
+
+        <details className={styles.autoOrganizer}>
+          <summary>
+            <div><strong>⚡ Reorganizar jornada automáticamente</strong><span>Marca quiénes faltan y repartimos los grupos disponibles.</span></div>
+            <b>Abrir</b>
+          </summary>
+          <form action={autoOrganizeDay}>
+            <input type="hidden" name="work_date" value={selectedDate} />
+            <p>Profesores que no estarán en esta jornada:</p>
+            <div className={styles.absentPicker}>
+              {staff.map((person) => (
+                <label key={person.id}><input type="checkbox" name="absent_staff" value={person.id} /><span>{person.full_name}</span></label>
+              ))}
+            </div>
+            <small>Se respetarán los niveles, los apoyos necesarios y los cruces de horario. Las asignaciones existentes de esta fecha se reemplazarán.</small>
+            <button type="submit">Reorganizar esta jornada</button>
+          </form>
+        </details>
 
         <nav className={styles.viewTabs}>
           <Link href={`/horarios-profesores?date=${selectedDate}`} className={!query.view ? styles.active : ""}>
@@ -123,7 +153,8 @@ export default async function StaffSchedulePage({
               const teacherSlots = slots.filter((slot) => {
                 const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
                 const assignment = assignments.get(slot.id);
-                return (assignment?.coach_profile_id ?? group?.coach_profile_id) === person.id;
+                return (assignment?.coach_profile_id ?? group?.coach_profile_id) === person.id
+                  || assignment?.assistant_profile_id === person.id;
               });
               if (teacherSlots.length === 0) return null;
               return (
@@ -149,7 +180,7 @@ export default async function StaffSchedulePage({
         ) : (
           <div className={styles.scheduleList}>
             <div className={styles.listHead}>
-              <span>Hora</span><span>Grupo fijo</span><span>Profesora del día</span><span>Novedad</span><span />
+              <span>Hora</span><span>Grupo</span><span>Principal</span><span>Apoyo</span><span>Novedad</span><span />
             </div>
             {slots.map((slot) => {
               const group = Array.isArray(slot.training_groups)
@@ -160,6 +191,14 @@ export default async function StaffSchedulePage({
               const selectedCoach = assignment
                 ? assignment.coach_profile_id ?? ""
                 : group?.coach_profile_id ?? "";
+              const selectedAssistant = assignment?.assistant_profile_id ?? "";
+              const levelName = level?.name ?? "";
+              const leadIds = recommendedFor(levelName, "lead");
+              const supportIds = recommendedFor(levelName, "support");
+              const leadStaff = staff.filter((person) => leadIds.has(person.id));
+              const otherStaff = staff.filter((person) => !leadIds.has(person.id));
+              const supportStaff = staff.filter((person) => supportIds.has(person.id));
+              const otherSupport = staff.filter((person) => !supportIds.has(person.id));
               return (
                 <form action={saveDailyAssignment} className={styles.scheduleRow} key={slot.id}>
                   <input type="hidden" name="work_date" value={selectedDate} />
@@ -177,13 +216,28 @@ export default async function StaffSchedulePage({
                     <span>Profesora del día</span>
                     <select name="coach_profile_id" defaultValue={selectedCoach}>
                       <option value="">Sin asignar</option>
-                      {staff.map((person) => (
-                        <option value={person.id} key={person.id}>{person.full_name}</option>
-                      ))}
+                      {leadStaff.length > 0 && <optgroup label={`Recomendados para ${levelName}`}>
+                        {leadStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
+                      </optgroup>}
+                      <optgroup label="Otros disponibles">
+                        {otherStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
+                      </optgroup>
                     </select>
                     {!assignment && group?.coach_profile_id && (
                       <small>Habitual: {staffNames.get(group.coach_profile_id) ?? "Profesora asignada"}</small>
                     )}
+                  </label>
+                  <label>
+                    <span>Profesor de apoyo</span>
+                    <select name="assistant_profile_id" defaultValue={selectedAssistant}>
+                      <option value="">Sin apoyo</option>
+                      {supportStaff.length > 0 && <optgroup label={`Apoyos recomendados para ${levelName}`}>
+                        {supportStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
+                      </optgroup>}
+                      <optgroup label="Otros disponibles">
+                        {otherSupport.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
+                      </optgroup>
+                    </select>
                   </label>
                   <label>
                     <span>Novedad o instrucción</span>
