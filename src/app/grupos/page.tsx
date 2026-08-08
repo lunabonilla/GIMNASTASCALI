@@ -9,6 +9,14 @@ const days = [
   [5, "Viernes"], [6, "Sábado"], [7, "Domingo"],
 ] as const;
 
+const enrollmentStatusLabels = {
+  active: "Entrenando",
+  vacation: "Vacaciones",
+  paused: "Pausa",
+  injured: "Lesión",
+  pending: "Pendiente",
+};
+
 type Enrollment = {
   id: string;
   active: boolean;
@@ -153,15 +161,17 @@ export default async function GroupsPage({
               const enrollments = group.enrollments.filter((item) => item.active);
               return (
                 <article className={`${styles.groupNote} ${!group.active ? styles.inactiveGroup : ""}`} key={`${group.id}-${slot.id}`}>
-                  <div className={styles.noteTop}>
-                    <div>
+                  <header className={styles.cardHeader}>
+                    <div className={styles.noteTop}>
                       <strong>{formatClubTime(slot.starts_at)}–{formatClubTime(slot.ends_at)}</strong>
-                      <span>{level?.name ?? group.billing_program ?? "Sin nivel"}</span>
+                      <small aria-label={`${enrollments.length} de ${group.capacity} cupos ocupados`}>{enrollments.length}/{group.capacity} cupos</small>
                     </div>
-                    <small>{enrollments.length}/{group.capacity}</small>
-                  </div>
-                  <Link href={`/grupos/${group.id}`} className={styles.groupName}>{group.name}</Link>
-                  <p className={styles.coach}>{group.staff_profiles?.[0]?.full_name ?? "Profesora sin asignar"}</p>
+                    <Link href={`/grupos/${group.id}`} className={styles.groupName}>{group.name}</Link>
+                    <div className={styles.metaRow}>
+                      <span>{level?.name ?? group.billing_program ?? "Sin nivel"}</span>
+                      <span>👤 {group.staff_profiles?.[0]?.full_name ?? "Sin profesora"}</span>
+                    </div>
+                  </header>
                   <div className={styles.gymnastNames}>
                     {enrollments.length === 0 ? (
                       <p>Sin gimnastas asignadas</p>
@@ -170,15 +180,23 @@ export default async function GroupsPage({
                         ? enrollment.gymnasts[0]
                         : enrollment.gymnasts;
                       return (
-                        <span className={styles[enrollment.participation_status]} key={enrollment.id}>
-                          {gymnast?.first_name} {gymnast?.last_name}
+                        <span
+                          className={styles[enrollment.participation_status]}
+                          aria-label={`${gymnast?.first_name} ${gymnast?.last_name}: ${enrollmentStatusLabels[enrollment.participation_status]}`}
+                          key={enrollment.id}
+                        >
+                          <i aria-hidden="true" />
+                          <b>{gymnast?.first_name} {gymnast?.last_name}</b>
+                          {enrollment.participation_status !== "active" && (
+                            <small>{enrollmentStatusLabels[enrollment.participation_status]}</small>
+                          )}
                         </span>
                       );
                     })}
                   </div>
                   <footer>
                     {!group.active && <span>Grupo inactivo</span>}
-                    <Link href={`/grupos/${group.id}`}>Administrar →</Link>
+                    <Link href={`/grupos/${group.id}`}>Ver y administrar <span aria-hidden="true">→</span></Link>
                   </footer>
                 </article>
               );

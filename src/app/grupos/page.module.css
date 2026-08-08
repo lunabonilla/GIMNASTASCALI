@@ -66,31 +66,53 @@
 }
 
 .legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border-radius: 999px;
-  font-size: 8px;
+  border: 1px solid #e6dfe9;
+  background: white;
+  font-size: 9px;
   font-weight: 800;
-  padding: 5px 7px;
+  padding: 6px 9px;
 }
+
+.legend span::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5fad82;
+  content: "";
+}
+
+.legend .active { color: #34745a; }
+.legend .vacation { color: #956915; }
+.legend .paused { color: #a84743; }
+.legend .injured { color: #9d4863; }
+.legend .pending { color: #39769f; }
+.legend .vacation::before { background: #e9b84f; }
+.legend .paused::before { background: #e47470; }
+.legend .injured::before { background: #de87a3; }
+.legend .pending::before { background: #65a6d5; }
 
 .scheduleBoard {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   align-items: start;
-  gap: 15px;
-  border-radius: 20px;
-  background-color: #f1eff3;
-  background-image: radial-gradient(#d9d4dd 1px, transparent 1px);
-  background-size: 16px 16px;
-  padding: 20px;
+  gap: 16px;
+  border: 1px solid #e9e3ed;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #f8f5fa, #f3eff6);
+  padding: 18px;
 }
 
 .groupNote {
+  overflow: hidden;
   min-width: 0;
-  border: 1px solid #e0d9e4;
-  border-radius: 5px;
+  border: 1px solid #e5dce9;
+  border-radius: 16px;
   background: white;
-  box-shadow: 0 5px 12px rgba(54, 40, 61, .09);
-  padding: 17px;
+  box-shadow: 0 10px 28px rgba(68, 39, 82, .07);
 }
 
 .inactiveGroup {
@@ -104,77 +126,119 @@
   gap: 10px;
 }
 
-.noteTop > div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.cardHeader {
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid #eee8f1;
+  background: linear-gradient(135deg, #fbf8fd, #f4edf9);
+  padding: 15px 16px 13px;
 }
 
 .noteTop strong {
-  color: #392f40;
-  font-size: 12px;
-}
-
-.noteTop span {
-  color: #8b8190;
-  font-size: 9px;
-  font-weight: 750;
+  color: #5f268b;
+  font-size: 13px;
 }
 
 .noteTop small {
-  border-radius: 7px;
+  border-radius: 999px;
   color: #662992;
-  background: #eee4f5;
+  background: white;
   font-size: 8px;
   font-weight: 850;
-  padding: 5px 7px;
+  padding: 5px 8px;
 }
 
 .groupName {
-  display: inline-block;
-  margin: 13px 0 2px;
-  color: #4a3d50;
-  font-size: 12px;
+  width: fit-content;
+  color: #302636;
+  font-size: 15px;
   font-weight: 900;
+  text-decoration: none;
 }
 
-.coach {
-  margin: 0 0 13px;
-  color: #897f8e;
-  font-size: 9px;
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.metaRow span {
+  border-radius: 6px;
+  color: #766b7d;
+  background: rgba(255, 255, 255, .85);
+  padding: 4px 7px;
+  font-size: 8px;
+  font-weight: 800;
 }
 
 .gymnastNames {
   display: grid;
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 9px;
+  padding: 14px 16px 7px;
 }
 
 .gymnastNames span {
-  border-left: 3px solid #6eb18d;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid #e5eee9;
+  border-radius: 9px;
+  background: #f8fcfa;
   color: #3f4e46;
-  font-size: 10px;
-  padding-left: 7px;
+  padding: 7px 8px;
+  font-size: 9px;
+}
+
+.gymnastNames span i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5fad82;
+}
+
+.gymnastNames span b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gymnastNames span small {
+  grid-column: 2;
+  margin-top: -4px;
+  font-size: 7px;
+  font-weight: 850;
 }
 
 .gymnastNames .vacation {
-  border-color: #e9b84f;
+  border-color: #f0dfba;
+  background: #fffaf0;
   color: #9a6910;
 }
+.gymnastNames .vacation i { background: #e9b84f; }
 
 .gymnastNames .paused {
-  border-color: #e47470;
+  border-color: #f0d0ce;
+  background: #fff6f5;
   color: #b14440;
 }
+.gymnastNames .paused i { background: #e47470; }
 
 .gymnastNames .injured {
-  border-color: #de87a3;
+  border-color: #f0d3dc;
+  background: #fff6f9;
   color: #a84665;
 }
+.gymnastNames .injured i { background: #de87a3; }
 
 .gymnastNames .pending {
-  border-color: #65a6d5;
+  border-color: #cfe1ef;
+  background: #f4f9fd;
   color: #39769f;
 }
+.gymnastNames .pending i { background: #65a6d5; }
 
 .gymnastNames p {
   margin: 5px 0;
@@ -187,9 +251,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 15px;
+  margin: 7px 16px 0;
   border-top: 1px solid #eee9f0;
-  padding-top: 11px;
+  padding: 10px 0 13px;
 }
 
 .groupNote footer span {
@@ -201,7 +265,7 @@
 .groupNote footer a {
   margin-left: auto;
   color: #672a93;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 850;
   text-decoration: none;
 }
@@ -233,6 +297,10 @@
 
   .scheduleBoard {
     grid-template-columns: 1fr;
-    padding: 13px;
+    padding: 10px;
+  }
+
+  .gymnastNames {
+    grid-template-columns: 1fr;
   }
 }
