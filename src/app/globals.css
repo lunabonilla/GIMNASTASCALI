@@ -2022,13 +2022,18 @@ th {
 
 .member-filters {
   display: flex;
+  flex: none;
+  flex-direction: row;
+  align-items: center;
   overflow-x: auto;
   gap: 5px;
   margin-top: 13px;
+  padding-bottom: 2px;
 }
 
 .member-filters a {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 5px;
   border-radius: 8px;
