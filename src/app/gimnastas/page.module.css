@@ -14,3 +14,80 @@
   color: #958d99;
   font-weight: 600;
 }
+
+.inlineForm {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.inlineSelect {
+  max-width: 150px;
+  min-height: 34px;
+  padding: 6px 28px 6px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #4a4150;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.inlineSelect:hover,
+.inlineSelect:focus-visible {
+  border-color: #8d5fbd;
+  outline: 3px solid rgba(109, 43, 159, 0.12);
+}
+
+.inlineSelect:disabled { cursor: wait; opacity: 0.7; }
+.saving { min-height: 12px; color: #82798a; font-size: 10px; }
+
+.program-minis { background: #fff0b8; color: #8a6415; }
+.program-regular { background: #f9d9e8; color: #a23f6d; }
+.program-intensivo { background: #dceaff; color: #37658f; }
+.program-none { background: #f2eff4; color: #706876; }
+.level-nivel-1 { background: #eadcf5; color: #734295; }
+.level-nivel-2 { background: #dcece5; color: #347052; }
+.level-nivel-3 { background: #ffe5c5; color: #975d1d; }
+.level-nivel-4 { background: #dce9fb; color: #3b648f; }
+.level-nivel-5 { background: #f5dce9; color: #904663; }
+.level-nivel-6 { background: #e4e1fb; color: #574f9a; }
+.level-circuito { background: #ffe6c7; color: #965b1c; }
+.level-none { background: #f2eff4; color: #706876; }
+.status-active { background: #e3f5ec; color: #287653; }
+.status-suspended { background: #fff0c9; color: #8a6217; }
+.status-retired { background: #f1edf2; color: #6f6872; }
+
+.cycleLink,
+.paymentLink,
+.advanceButton {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border: 1px solid #d7c2e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #61249a;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.advanceButton {
+  border-color: #6d2b9f;
+  background: #6d2b9f;
+  color: white;
+  cursor: pointer;
+}
+
+.paymentLink { background: #fff8e8; border-color: #f0d89f; color: #825b0e; }
+
+@media (max-width: 720px) {
+  .inlineSelect { max-width: 132px; }
+}

@@ -6,6 +6,139 @@ import { parse } from "csv-parse/sync";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentStaffProfile } from "@/lib/current-staff";
 
+const directoryUrl = (query: string, parameter: string) =>
+  `/gimnastas${query ? `${query}&${parameter}` : `?${parameter}`}`;
+
+const safeReturnQuery = (raw: string) =>
+  raw.startsWith("?") && !raw.includes("//") ? raw : "";
+
+const addUtcDays = (value: string, days: number) => {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+export async function updateGymnastInline(formData: FormData) {
+  const gymnastId = String(formData.get("gymnast_id") ?? "").trim();
+  const field = String(formData.get("field") ?? "").trim();
+  const newValue = String(formData.get("value") ?? "").trim();
+  const returnQuery = safeReturnQuery(String(formData.get("return_query") ?? ""));
+  const allowedFields = new Set(["program", "level_id", "status"]);
+
+  if (!gymnastId || !allowedFields.has(field)) {
+    redirect(directoryUrl(returnQuery, "error=Cambio+no+v%C3%A1lido"));
+  }
+
+  const supabase = await createClient();
+  const profile = await getCurrentStaffProfile();
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(directoryUrl(returnQuery, "error=No+tienes+permiso+para+editar"));
+  }
+
+  let error: { message: string } | null = null;
+  if (field === "program") {
+    if (newValue && !["Minis", "Regular", "Intensivo"].includes(newValue)) {
+      redirect(directoryUrl(returnQuery, "error=Programa+no+v%C3%A1lido"));
+    }
+    ({ error } = await supabase.from("gymnast_billing_profiles").upsert({
+      gymnast_id: gymnastId,
+      program: newValue || null,
+    }));
+  } else if (field === "level_id") {
+    ({ error } = await supabase
+      .from("gymnasts")
+      .update({ level_id: newValue || null })
+      .eq("id", gymnastId));
+  } else {
+    if (!["active", "suspended", "retired"].includes(newValue)) {
+      redirect(directoryUrl(returnQuery, "error=Estado+no+v%C3%A1lido"));
+    }
+    ({ error } = await supabase
+      .from("gymnasts")
+      .update({ status: newValue })
+      .eq("id", gymnastId));
+  }
+
+  if (error) {
+    redirect(directoryUrl(returnQuery, "error=No+pudimos+guardar+el+cambio"));
+  }
+  revalidatePath("/");
+  revalidatePath("/gimnastas");
+  revalidatePath(`/gimnastas/${gymnastId}`);
+  redirect(directoryUrl(returnQuery, "updated=1"));
+}
+
+export async function advancePaidCycle(formData: FormData) {
+  const gymnastId = String(formData.get("gymnast_id") ?? "").trim();
+  const returnQuery = safeReturnQuery(String(formData.get("return_query") ?? ""));
+  if (!gymnastId) redirect(directoryUrl(returnQuery, "error=Gimnasta+no+v%C3%A1lida"));
+
+  const supabase = await createClient();
+  const profile = await getCurrentStaffProfile();
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(directoryUrl(returnQuery, "error=No+tienes+permiso+para+crear+ciclos"));
+  }
+
+  const { data: current } = await supabase
+    .from("billing_charges")
+    .select("id, amount_cents, period_starts_on, period_ends_on, due_on, payment_allocations(amount_cents)")
+    .eq("gymnast_id", gymnastId)
+    .eq("category", "monthly_fee")
+    .is("voided_at", null)
+    .not("period_starts_on", "is", null)
+    .order("period_starts_on", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!current) {
+    redirect(directoryUrl(returnQuery, "error=Primero+crea+el+ciclo+actual"));
+  }
+  const paid = (current.payment_allocations ?? []).reduce(
+    (total, allocation) => total + Number(allocation.amount_cents),
+    0,
+  );
+  if (paid < Number(current.amount_cents)) {
+    redirect(directoryUrl(returnQuery, "error=Primero+registra+el+pago+completo"));
+  }
+
+  const startsOn = current.period_ends_on ?? current.due_on;
+  const endsOn = addUtcDays(startsOn, 28);
+  const dueOn = addUtcDays(startsOn, 5);
+  const { data: duplicate } = await supabase
+    .from("billing_charges")
+    .select("id")
+    .eq("gymnast_id", gymnastId)
+    .eq("category", "monthly_fee")
+    .eq("period_starts_on", startsOn)
+    .is("voided_at", null)
+    .maybeSingle();
+  if (duplicate) {
+    redirect(directoryUrl(returnQuery, "error=El+siguiente+ciclo+ya+existe"));
+  }
+
+  const { error } = await supabase.from("billing_charges").insert({
+    gymnast_id: gymnastId,
+    concept: "Ciclo de entrenamiento",
+    category: "monthly_fee",
+    description: `Ciclo de 4 semanas: ${startsOn} a ${endsOn}`,
+    issued_on: startsOn,
+    due_on: dueOn,
+    period_starts_on: startsOn,
+    period_ends_on: endsOn,
+    amount_cents: current.amount_cents,
+    created_by: profile.id,
+  });
+  if (error) {
+    redirect(directoryUrl(returnQuery, "error=No+pudimos+crear+el+siguiente+ciclo"));
+  }
+
+  revalidatePath("/");
+  revalidatePath("/gimnastas");
+  revalidatePath("/pagos");
+  revalidatePath(`/pagos/${gymnastId}`);
+  redirect(directoryUrl(returnQuery, "cycle_created=1"));
+}
+
 export async function createGymnast(formData: FormData) {
   const value = (name: string) => String(formData.get(name) ?? "").trim();
   const firstName = value("first_name");

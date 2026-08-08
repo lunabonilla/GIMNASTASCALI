@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { advancePaidCycle } from "./actions";
+import { InlineSelect } from "./inline-select";
 import styles from "./page.module.css";
 
 type SearchParams = Promise<{
@@ -10,6 +12,9 @@ type SearchParams = Promise<{
   created?: string;
   imported?: string;
   pending?: string;
+  updated?: string;
+  cycle_created?: string;
+  error?: string;
 }>;
 
 export default async function GymnastsPage({
@@ -28,6 +33,9 @@ export default async function GymnastsPage({
     created,
     imported,
     pending,
+    updated,
+    cycle_created: cycleCreated,
+    error: message,
   } = await searchParams;
   let query = supabase
     .from("gymnasts")
@@ -56,7 +64,7 @@ export default async function GymnastsPage({
       .order("sort_order"),
     supabase
       .from("billing_charges")
-      .select("gymnast_id, period_starts_on, period_ends_on, due_on")
+      .select("gymnast_id, amount_cents, period_starts_on, period_ends_on, due_on, payment_allocations(amount_cents)")
       .eq("category", "monthly_fee")
       .is("voided_at", null)
       .not("period_starts_on", "is", null)
@@ -94,14 +102,24 @@ export default async function GymnastsPage({
   const cycleByGymnast = new Map<string, {
     startsOn: string;
     endsOn: string | null;
+    paid: boolean;
   }>();
   for (const cycle of cycleData ?? []) {
     if (!cycle.period_starts_on || cycleByGymnast.has(cycle.gymnast_id)) continue;
     cycleByGymnast.set(cycle.gymnast_id, {
       startsOn: cycle.period_starts_on,
       endsOn: cycle.period_ends_on ?? cycle.due_on,
+      paid: (cycle.payment_allocations ?? []).reduce(
+        (total, allocation) => total + Number(allocation.amount_cents),
+        0,
+      ) >= Number(cycle.amount_cents),
     });
   }
+  const returnParams = new URLSearchParams();
+  if (q) returnParams.set("q", q);
+  if (status) returnParams.set("status", status);
+  if (level) returnParams.set("level", level);
+  const returnQuery = returnParams.size ? `?${returnParams.toString()}` : "";
   const shortDate = (value: string | null | undefined) =>
     value
       ? new Intl.DateTimeFormat("es-CO", {
@@ -135,6 +153,13 @@ export default async function GymnastsPage({
         {created && (
           <div className="success-banner">✓ Gimnasta registrada correctamente.</div>
         )}
+        {updated && (
+          <div className="success-banner">✓ Cambio guardado automáticamente.</div>
+        )}
+        {cycleCreated && (
+          <div className="success-banner">✓ Siguiente ciclo de 4 semanas creado.</div>
+        )}
+        {message && <div className="error-banner">{message}</div>}
         {imported && (
           <div className="success-banner">
             ✓ {imported === "0" ? "La base ya estaba importada" : `${imported} gimnastas importadas`}.
@@ -222,6 +247,7 @@ export default async function GymnastsPage({
                     <th>Grupo y días</th>
                     <th>Inicio ciclo</th>
                     <th>Vence ciclo</th>
+                    <th>Pago y ciclo</th>
                     <th>Estado deportivo</th>
                     <th>Información</th>
                   </tr>
@@ -250,8 +276,36 @@ export default async function GymnastsPage({
                         </Link>
                         <small className="table-secondary">{gymnast.identity_document || "Documento pendiente"}</small>
                       </td>
-                      <td><span className={`notion-tag ${tagClass(billing?.program, "program")}`}>{billing?.program || "Sin programa"}</span></td>
-                      <td><span className={`notion-tag ${tagClass(gymnastLevel?.name, "level")}`}>{gymnastLevel?.name || "Sin asignar"}</span></td>
+                      <td>
+                        <InlineSelect
+                          gymnastId={gymnast.id}
+                          field="program"
+                          value={billing?.program ?? ""}
+                          returnQuery={returnQuery}
+                          label={`Programa de ${gymnast.first_name} ${gymnast.last_name}`}
+                          tone={tagClass(billing?.program, "program")}
+                          options={[
+                            { value: "", label: "Sin programa" },
+                            { value: "Minis", label: "Minis" },
+                            { value: "Regular", label: "Regular" },
+                            { value: "Intensivo", label: "Intensivo" },
+                          ]}
+                        />
+                      </td>
+                      <td>
+                        <InlineSelect
+                          gymnastId={gymnast.id}
+                          field="level_id"
+                          value={levels.find((item) => item.name === gymnastLevel?.name)?.id ?? ""}
+                          returnQuery={returnQuery}
+                          label={`Nivel de ${gymnast.first_name} ${gymnast.last_name}`}
+                          tone={tagClass(gymnastLevel?.name, "level")}
+                          options={[
+                            { value: "", label: "Sin asignar" },
+                            ...levels.map((item) => ({ value: item.id, label: item.name })),
+                          ]}
+                        />
+                      </td>
                       <td>
                         <strong className="table-group-name">{group?.name || "Sin grupo"}</strong>
                         <small className="table-secondary">{days || "Días pendientes"}</small>
@@ -267,13 +321,36 @@ export default async function GymnastsPage({
                         </span>
                       </td>
                       <td>
-                        <span className={`sport-status ${gymnast.status}`}>
-                          {gymnast.status === "active"
-                            ? "Activa"
-                            : gymnast.status === "suspended"
-                              ? "Pausada"
-                              : "Retirada"}
-                        </span>
+                        {!cycle ? (
+                          <Link href={`/pagos/nuevo`} className={styles.cycleLink}>Crear ciclo</Link>
+                        ) : cycle.paid ? (
+                          <form action={advancePaidCycle}>
+                            <input type="hidden" name="gymnast_id" value={gymnast.id} />
+                            <input type="hidden" name="return_query" value={returnQuery} />
+                            <button type="submit" className={styles.advanceButton}>
+                              Siguiente +4 semanas
+                            </button>
+                          </form>
+                        ) : (
+                          <Link href={`/pagos/${gymnast.id}`} className={styles.paymentLink}>
+                            Registrar pago
+                          </Link>
+                        )}
+                      </td>
+                      <td>
+                        <InlineSelect
+                          gymnastId={gymnast.id}
+                          field="status"
+                          value={gymnast.status}
+                          returnQuery={returnQuery}
+                          label={`Estado deportivo de ${gymnast.first_name} ${gymnast.last_name}`}
+                          tone={`status-${gymnast.status}`}
+                          options={[
+                            { value: "active", label: "Activa" },
+                            { value: "suspended", label: "Pausada" },
+                            { value: "retired", label: "Retirada" },
+                          ]}
+                        />
                       </td>
                       <td>
                         {gymnast.gymnast_guardians.length ? (
