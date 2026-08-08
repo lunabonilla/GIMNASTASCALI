@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
 import {
   deleteGroup,
-  endEnrollment,
   permanentlyDeleteGroup,
   updateEnrollmentStatus,
 } from "../actions";
 import { GymnastPicker } from "./gymnast-picker";
+import { RemoveEnrollmentButton } from "./remove-enrollment-button";
 
 const dayNames: Record<number, string> = {
   1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves",
@@ -169,20 +169,23 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
                   const gymnast = Array.isArray(enrollment.gymnasts)
                     ? enrollment.gymnasts[0]
                     : enrollment.gymnasts;
+                  const gymnastName = `${gymnast?.first_name ?? ""} ${gymnast?.last_name ?? ""}`.trim();
                   return (
                     <div className={`member-row member-${enrollment.participation_status}`} key={enrollment.id}>
                       <div className="member-avatar">
                         {gymnast?.first_name?.[0] ?? "G"}
                       </div>
-                      <div>
-                        <strong>{gymnast?.first_name} {gymnast?.last_name}</strong>
-                        <span>Desde {new Intl.DateTimeFormat("es-CO", {
-                          dateStyle: "medium", timeZone: "UTC",
-                        }).format(new Date(enrollment.starts_on))}</span>
-                        <small className={`member-status member-status-${enrollment.participation_status}`}>
-                          {statusLabels[enrollment.participation_status]}
-                          {enrollment.status_note ? ` · ${enrollment.status_note}` : ""}
-                        </small>
+                      <div className="member-identity">
+                        <strong>{gymnastName}</strong>
+                        <div className="member-meta">
+                          <small className={`member-status member-status-${enrollment.participation_status}`}>
+                            {statusLabels[enrollment.participation_status]}
+                          </small>
+                          <span>Desde {new Intl.DateTimeFormat("es-CO", {
+                            dateStyle: "medium", timeZone: "UTC",
+                          }).format(new Date(enrollment.starts_on))}</span>
+                          {enrollment.status_note && <span>· {enrollment.status_note}</span>}
+                        </div>
                       </div>
                       <form action={updateEnrollmentStatus} className="member-status-form">
                         <input type="hidden" name="group_id" value={detail.id} />
@@ -198,11 +201,11 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
                         <input name="status_note" defaultValue={enrollment.status_note ?? ""} placeholder="Nota opcional" />
                         <button type="submit">Guardar</button>
                       </form>
-                      <form action={endEnrollment}>
-                        <input type="hidden" name="group_id" value={detail.id} />
-                        <input type="hidden" name="enrollment_id" value={enrollment.id} />
-                        <button type="submit">Retirar</button>
-                      </form>
+                      <RemoveEnrollmentButton
+                        groupId={detail.id}
+                        enrollmentId={enrollment.id}
+                        gymnastName={gymnastName}
+                      />
                     </div>
                   );
                 })}

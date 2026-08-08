@@ -19,27 +19,39 @@
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  gap: 2px;
 }
 
 .inlineSelect {
-  max-width: 150px;
-  min-height: 34px;
-  padding: 6px 28px 6px 11px;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  max-width: 155px;
+  min-height: 36px;
+  padding: 7px 32px 7px 12px;
+  border: 1px solid rgba(79, 50, 92, 0.06);
+  border-radius: 999px;
   color: #4a4150;
   font: inherit;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  appearance: auto;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 -1px 0 rgba(59, 32, 70, 0.04);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
+.inlineSelect:hover { transform: translateY(-1px); }
 .inlineSelect:hover,
 .inlineSelect:focus-visible {
   border-color: #8d5fbd;
-  outline: 3px solid rgba(109, 43, 159, 0.12);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(109, 43, 159, 0.12), 0 5px 12px rgba(74, 35, 97, 0.08);
 }
 
 .inlineSelect:disabled { cursor: wait; opacity: 0.7; }
@@ -68,25 +80,38 @@
   min-height: 36px;
   align-items: center;
   justify-content: center;
-  padding: 7px 12px;
+  padding: 8px 13px;
   border: 1px solid #d7c2e7;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
   color: #61249a;
   font-size: 12px;
   font-weight: 850;
   text-decoration: none;
   white-space: nowrap;
+  box-shadow: 0 5px 14px rgba(78, 40, 102, 0.08);
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.cycleLink:hover,
+.paymentLink:hover,
+.advanceButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(78, 40, 102, 0.14);
 }
 
 .advanceButton {
   border-color: #6d2b9f;
-  background: #6d2b9f;
+  background: linear-gradient(135deg, #7632aa, #59208c);
   color: white;
   cursor: pointer;
 }
 
-.paymentLink { background: #fff8e8; border-color: #f0d89f; color: #825b0e; }
+.paymentLink {
+  background: linear-gradient(135deg, #fffaf0, #fff2cf);
+  border-color: #ecd395;
+  color: #825b0e;
+}
 
 @media (max-width: 720px) {
   .inlineSelect { max-width: 132px; }
