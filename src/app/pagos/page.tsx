@@ -247,9 +247,6 @@ export default async function PaymentsPage({
             </div>
           ) : (
             <div className={styles.accounts}>
-              <div className={styles.columns}>
-                <span>Gimnasta</span><span>Vencimiento</span><span>Qué debe</span><span>Saldo</span>
-              </div>
               {rows.map((account) => {
                 const balance = balanceOf(account);
                 const state = balance === 0 ? "paid" : account.overdue > 0 ? "late" : "pending";
@@ -260,54 +257,62 @@ export default async function PaymentsPage({
                         <i>{account.name.charAt(0)}</i>
                         <span>
                           <strong>{account.name}</strong>
-                          <small className={styles[state]}>
-                            {state === "paid" ? "Al día" : state === "late" ? "Vencido" : "Pendiente"}
-                          </small>
+                          <span className={styles.personMeta}>
+                            <small className={styles[state]}>
+                              {state === "paid" ? "Al día" : state === "late" ? "Pago vencido" : "Pago pendiente"}
+                            </small>
+                            <small>{account.debts.length} {account.debts.length === 1 ? "cargo" : "cargos"}</small>
+                          </span>
                         </span>
                       </span>
                       <span className={styles.due}>
-                        <small>{account.nextDue && account.nextDue < today ? "Venció" : "Vence"}</small>
+                        <small>{account.nextDue && account.nextDue < today ? "Venció el" : "Próximo vencimiento"}</small>
                         <strong>{account.nextDue ? dateLabel(account.nextDue) : "Sin deuda"}</strong>
                       </span>
-                      <span className={styles.preview}>
-                        {account.debts.slice(0, 2).map((debt, index) => (
-                          <small className={styles[debt.category] ?? ""} key={`${debt.concept}-${index}`}>
-                            {debt.concept}
-                          </small>
-                        ))}
-                        {account.debts.length > 2 && <small>+{account.debts.length - 2}</small>}
-                      </span>
                       <span className={styles.balance}>
+                        <small>Saldo total</small>
                         <strong>{money(balance)}</strong>
-                        <small>Abrir detalle⌄</small>
                       </span>
+                      <i className={styles.chevron} aria-hidden="true">⌄</i>
                     </summary>
 
                     <div className={styles.detail}>
-                      <div className={styles.cycleInfo}>
-                        <span><small>Inicio del ciclo</small><strong>{dateLabel(account.cycleStart)}</strong></span>
-                        <span><small>Fin del ciclo</small><strong>{dateLabel(account.cycleEnd)}</strong></span>
+                      <div className={styles.detailHeading}>
+                        <div>
+                          <span className="section-kicker">Detalle de la cuenta</span>
+                          <h3>{account.debts.length ? "¿Qué debe?" : "Sin cargos pendientes"}</h3>
+                        </div>
                         <span><small>Total abonado</small><strong>{money(account.paid)}</strong></span>
                       </div>
                       <div className={styles.breakdown}>
-                        <div className={styles.breakdownHead}><strong>Concepto pendiente</strong><span>Saldo</span></div>
                         {account.debts.length === 0 ? (
                           <p>Esta gimnasta no tiene cargos pendientes.</p>
                         ) : account.debts.map((debt, index) => (
                           <div className={styles.debtLine} key={`${debt.concept}-${index}`}>
-                            <i className={styles[debt.category] ?? ""} />
+                            <i className={`${styles.debtIcon} ${styles[debt.category] ?? ""}`}>
+                              {debt.category === "monthly_fee" ? "4S" : debt.category === "product" ? "□" : debt.category === "competition" ? "★" : "+"}
+                            </i>
                             <span>
                               <strong>{debt.concept}</strong>
-                              <small>{debt.description || `Vence ${dateLabel(debt.dueOn)}`}</small>
+                              {debt.description && <small>{debt.description}</small>}
+                              <small className={debt.dueOn < today ? styles.debtLate : ""}>
+                                {debt.dueOn < today ? "Venció" : "Vence"} {dateLabel(debt.dueOn)}
+                              </small>
                             </span>
-                            <b>{money(debt.balance)}</b>
+                            <span className={styles.debtAmount}><small>Por pagar</small><b>{money(debt.balance)}</b></span>
                           </div>
                         ))}
                       </div>
+                      {(account.cycleStart || account.cycleEnd) && (
+                        <div className={styles.cycleStrip}>
+                          <span>Ciclo actual</span>
+                          <strong>{dateLabel(account.cycleStart)} → {dateLabel(account.cycleEnd)}</strong>
+                        </div>
+                      )}
                       <div className={styles.actions}>
-                        <Link href={`/pagos/${account.id}`}>Ver historial completo</Link>
+                        <Link href={`/pagos/${account.id}`}>Ver movimientos</Link>
                         <Link href={`/pagos/${account.id}`} className={styles.payButton}>
-                          Registrar pago o abono
+                          ＋ Registrar pago o abono
                         </Link>
                       </div>
                     </div>
