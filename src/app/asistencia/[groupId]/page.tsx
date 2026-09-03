@@ -8,6 +8,8 @@ type PageProps = {
   params: Promise<{ groupId: string }>;
   searchParams: Promise<{
     date?: string;
+    day?: string;
+    starts?: string;
     saved?: string;
     makeup?: string;
     error?: string;
@@ -27,7 +29,7 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
   const [{ data: group }, { data: enrollmentData }, { data: activeGymnastData }] = await Promise.all([
     supabase
       .from("training_groups")
-      .select("id, name, group_schedule_slots(starts_at, ends_at)")
+      .select("id, name, group_schedule_slots(weekday, starts_at, ends_at)")
       .eq("id", groupId)
       .single(),
     supabase
@@ -47,9 +49,11 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
   const detail = group as {
     id: string;
     name: string;
-    group_schedule_slots: Array<{ starts_at: string; ends_at: string }>;
+    group_schedule_slots: Array<{ weekday: number; starts_at: string; ends_at: string }>;
   };
-  const slot = detail.group_schedule_slots[0];
+  const slot = detail.group_schedule_slots.find((item) =>
+    query.starts ? item.starts_at === query.starts : item.weekday === Number(query.day),
+  ) ?? detail.group_schedule_slots[0];
   const enrollments = (enrollmentData ?? []) as Array<{
     gymnast_id: string;
     gymnasts:
@@ -110,13 +114,15 @@ export default async function GroupAttendancePage({ params, searchParams }: Page
   return (
     <main className="form-page">
       <div className="attendance-card">
-        <Link href="/asistencia" className="back-link">← Volver a asistencia</Link>
+        <Link href={`/asistencia${query.day ? `?day=${query.day}` : ""}`} className="back-link">← Volver a asistencia</Link>
         <div className="attendance-heading">
           <div>
             <span className="section-kicker">Tomar asistencia</span>
             <h1>{detail.name}</h1>
           </div>
           <form method="get" className="date-picker">
+            {query.day && <input type="hidden" name="day" value={query.day} />}
+            {query.starts && <input type="hidden" name="starts" value={query.starts} />}
             <label>Fecha<input type="date" name="date" defaultValue={date} /></label>
             <button type="submit">Ver fecha</button>
           </form>
