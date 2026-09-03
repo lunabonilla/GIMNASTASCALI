@@ -84,7 +84,7 @@ export default async function AttendancePage({
               className={selectedDay === day ? "active" : ""}
               key={day}
             >
-              {label}<span>{dayCounts.get(day) ?? 0}</span>
+              <b>{label.slice(0, 3)}</b><span>{dayCounts.get(day) ?? 0}</span>
             </Link>
           ))}
         </nav>

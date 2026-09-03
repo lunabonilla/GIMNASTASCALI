@@ -1708,34 +1708,43 @@ th {
 }
 
 .attendance-day-tabs {
-  display: flex;
-  gap: 7px;
+  display: grid;
+  grid-template-columns: repeat(7, 48px);
+  gap: 6px;
   margin-bottom: 18px;
-  overflow-x: auto;
-  padding-bottom: 3px;
 }
 
 .attendance-day-tabs a {
-  display: flex;
-  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 6px;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 48px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 11px;
   color: var(--muted);
   background: white;
-  padding: 8px 11px;
-  font-size: 9px;
+  padding: 5px;
+  font-size: 8px;
   font-weight: 800;
   text-decoration: none;
+}
+
+.attendance-day-tabs a b {
+  font: inherit;
+  text-transform: capitalize;
 }
 
 .attendance-day-tabs a span {
   border-radius: 999px;
   color: #6d6173;
   background: #f1edf3;
-  padding: 2px 6px;
-  font-size: 8px;
+  min-width: 17px;
+  padding: 2px 4px;
+  font-size: 7px;
+  text-align: center;
 }
 
 .attendance-day-tabs a.active {
@@ -2342,13 +2351,14 @@ th {
 
 @media (max-width: 650px) {
   .attendance-day-tabs {
-    margin-right: -24px;
-    padding-right: 24px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .attendance-day-tabs a {
-    min-width: 78px;
-    justify-content: center;
+    min-width: 0;
+    min-height: 45px;
+    padding: 4px 2px;
   }
 
   .danger-zone {
