@@ -19,9 +19,11 @@ const normalize = (value: string) =>
 export function GymnastPicker({
   groupId,
   gymnasts,
+  returnDay,
 }: {
   groupId: string;
   gymnasts: GymnastOption[];
+  returnDay?: number;
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<GymnastOption | null>(null);
@@ -38,6 +40,7 @@ export function GymnastPicker({
     <form action={enrollGymnast} className="group-gymnast-picker">
       <input type="hidden" name="group_id" value={groupId} />
       <input type="hidden" name="gymnast_id" value={selected?.id ?? ""} />
+      {returnDay && <input type="hidden" name="return_day" value={returnDay} />}
       <label>
         Escribe el nombre de la niña
         <input

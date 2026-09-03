@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
-import { quickUpdateGroup } from "./actions";
+import { QuickParticipants } from "./quick-participants";
 import styles from "./page.module.css";
 
 const days = [
@@ -22,9 +22,10 @@ type Enrollment = {
   id: string;
   active: boolean;
   participation_status: "active" | "vacation" | "paused" | "injured" | "pending";
+  status_note: string | null;
   gymnasts:
-    | { first_name: string; last_name: string }
-    | Array<{ first_name: string; last_name: string }>
+    | { id: string; first_name: string; last_name: string; status: "active" | "suspended" | "retired" }
+    | Array<{ id: string; first_name: string; last_name: string; status: "active" | "suspended" | "retired" }>
     | null;
 };
 
@@ -57,7 +58,9 @@ export default async function GroupsPage({
     archived?: string;
     permanently_deleted?: string;
     missing?: string;
-    quick_updated?: string;
+    participant_added?: string;
+    participant_removed?: string;
+    participant_updated?: string;
     error?: string;
   }>;
 }) {
@@ -80,17 +83,32 @@ export default async function GroupsPage({
     ? requestedDay
     : actualWeekday;
 
-  const [{ data, error }, { data: levelsData }, { data: staffData }] = await Promise.all([
+  const [{ data, error }, { data: gymnastData }] = await Promise.all([
     supabase
       .from("training_groups")
-      .select("id, name, billing_program, level_id, coach_profile_id, capacity, active, levels(name), staff_profiles(full_name), group_schedule_slots(id, weekday, starts_at, ends_at), enrollments(id, active, participation_status, gymnasts(first_name, last_name))")
+      .select("id, name, billing_program, level_id, coach_profile_id, capacity, active, levels(name), staff_profiles(full_name), group_schedule_slots(id, weekday, starts_at, ends_at), enrollments(id, active, participation_status, status_note, gymnasts(id, first_name, last_name, status))")
       .order("name"),
-    supabase.from("levels").select("id, name").eq("active", true).order("sort_order"),
-    supabase.from("staff_profiles").select("id, full_name").eq("active", true).order("full_name"),
+    supabase
+      .from("gymnasts")
+      .select("id, first_name, last_name, status")
+      .in("status", ["active", "suspended"])
+      .order("first_name")
+      .order("last_name"),
   ]);
   const groups = (data ?? []) as Group[];
-  const levels = (levelsData ?? []) as Array<{ id: string; name: string }>;
-  const staff = (staffData ?? []) as Array<{ id: string; full_name: string }>;
+  const enrolledGymnastIds = new Set(
+    groups.flatMap((group) => group.enrollments.filter((item) => item.active).flatMap((item) => {
+      const gymnast = Array.isArray(item.gymnasts) ? item.gymnasts[0] : item.gymnasts;
+      return gymnast?.id ? [gymnast.id] : [];
+    })),
+  );
+  const availableGymnasts = (gymnastData ?? [])
+    .filter((gymnast) => !enrolledGymnastIds.has(gymnast.id))
+    .map((gymnast) => ({
+      id: gymnast.id,
+      name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+      status: gymnast.status as "active" | "suspended",
+    }));
   const dayCounts = new Map<number, number>();
   for (const group of groups) {
     for (const weekday of new Set(group.group_schedule_slots.map((slot) => slot.weekday))) {
@@ -125,7 +143,9 @@ export default async function GroupsPage({
         {params.permanently_deleted && <div className="success-banner">✓ Grupo eliminado definitivamente.</div>}
         {params.archived && <div className="success-banner">✓ Grupo desactivado; su historial quedó protegido.</div>}
         {params.missing && <div className="info-banner">Ese grupo ya no existe. Te devolvimos al listado de horarios.</div>}
-        {params.quick_updated && <div className="success-banner">✓ Cambios guardados sin salir del horario.</div>}
+        {params.participant_added && <div className="success-banner">✓ Gimnasta agregada al grupo.</div>}
+        {params.participant_removed && <div className="success-banner">✓ Gimnasta retirada del grupo.</div>}
+        {params.participant_updated && <div className="success-banner">✓ Estado de la gimnasta actualizado.</div>}
         {params.error && <div className="error-banner">{params.error}</div>}
 
         <nav className={styles.dayTabs} aria-label="Días de la semana">
@@ -207,24 +227,24 @@ export default async function GroupsPage({
                       );
                     })}
                   </div>
+                  <QuickParticipants
+                    groupId={group.id}
+                    day={selectedDay}
+                    participants={enrollments.flatMap((enrollment) => {
+                      const gymnast = Array.isArray(enrollment.gymnasts)
+                        ? enrollment.gymnasts[0]
+                        : enrollment.gymnasts;
+                      return gymnast ? [{
+                        id: enrollment.id,
+                        name: `${gymnast.first_name} ${gymnast.last_name}`.trim(),
+                        status: enrollment.participation_status,
+                        statusNote: enrollment.status_note,
+                      }] : [];
+                    })}
+                    availableGymnasts={availableGymnasts}
+                  />
                   <footer>
                     {!group.active && <span>Grupo inactivo</span>}
-                    <details className={styles.quickEditor}>
-                      <summary>Editar rápido</summary>
-                      <form action={quickUpdateGroup}>
-                        <input type="hidden" name="group_id" value={group.id} />
-                        <input type="hidden" name="slot_id" value={slot.id} />
-                        <label className={styles.fullField}>Nombre<input name="name" defaultValue={group.name} required /></label>
-                        <label>Programa<select name="billing_program" defaultValue={group.billing_program ?? "Regular"}><option>Minis</option><option>Regular</option><option>Intensivo</option></select></label>
-                        <label>Nivel<select name="level_id" defaultValue={group.level_id ?? ""}><option value="">Sin nivel</option>{levels.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-                        <label className={styles.fullField}>Profesora<select name="coach_profile_id" defaultValue={group.coach_profile_id ?? ""}><option value="">Sin asignar</option>{staff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</select></label>
-                        <label>Día<select name="weekday" defaultValue={slot.weekday}>{days.map(([day, label]) => <option value={day} key={day}>{label}</option>)}</select></label>
-                        <label>Inicio<input name="starts_at" type="time" defaultValue={slot.starts_at.slice(0, 5)} required /></label>
-                        <label>Final<input name="ends_at" type="time" defaultValue={slot.ends_at.slice(0, 5)} required /></label>
-                        <label>Cupos<input name="capacity" type="number" min="1" defaultValue={group.capacity} required /></label>
-                        <button type="submit">Guardar cambios</button>
-                      </form>
-                    </details>
                     <Link href={`/grupos/${group.id}`}>Ver y administrar <span aria-hidden="true">→</span></Link>
                   </footer>
                 </article>

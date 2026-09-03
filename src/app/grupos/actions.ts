@@ -101,71 +101,6 @@ export async function createGroup(formData: FormData) {
   redirect(`/grupos?day=${safeReturnDay}&created=1`);
 }
 
-export async function quickUpdateGroup(formData: FormData) {
-  const groupId = value(formData, "group_id");
-  const slotId = value(formData, "slot_id");
-  const name = value(formData, "name");
-  const billingProgram = value(formData, "billing_program");
-  const startsAt = value(formData, "starts_at");
-  const endsAt = value(formData, "ends_at");
-  const capacity = Number(value(formData, "capacity"));
-  const day = Number(value(formData, "weekday"));
-  const safeDay = Number.isInteger(day) && day >= 1 && day <= 7 ? day : 1;
-  const returnUrl = `/grupos?day=${safeDay}`;
-
-  if (!groupId || !slotId || !name || !startsAt || !endsAt || endsAt <= startsAt ||
-      !Number.isInteger(capacity) || capacity < 1 ||
-      !["Minis", "Regular", "Intensivo"].includes(billingProgram)) {
-    redirect(`${returnUrl}&error=Revisa+los+datos+de+la+edición+rápida`);
-  }
-
-  const supabase = await createClient();
-  const [profile, { count: occupied }, { count: weeklyDays }] = await Promise.all([
-    getCurrentStaffProfile(),
-    supabase.from("enrollments").select("*", { count: "exact", head: true })
-      .eq("group_id", groupId).eq("active", true),
-    supabase.from("group_schedule_slots").select("weekday", { count: "exact", head: true })
-      .eq("group_id", groupId),
-  ]);
-  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
-    redirect(`${returnUrl}&error=No+tienes+permiso+para+editar+grupos`);
-  }
-  if (capacity < (occupied ?? 0)) {
-    redirect(`${returnUrl}&error=El+cupo+no+puede+ser+menor+a+las+gimnastas+actuales`);
-  }
-
-  let rateQuery = supabase.from("billing_rate_plans").select("amount_cents")
-    .eq("program", billingProgram).eq("effective_year", 2026).eq("active", true);
-  rateQuery = billingProgram === "Intensivo"
-    ? rateQuery.is("days_per_week", null)
-    : rateQuery.eq("days_per_week", Math.min(2, Math.max(1, weeklyDays ?? 1)));
-  const { data: rate } = await rateQuery.maybeSingle();
-  if (!rate) redirect(`${returnUrl}&error=No+encontramos+la+tarifa+del+programa`);
-
-  const { error: groupError } = await supabase.from("training_groups").update({
-    name,
-    billing_program: billingProgram,
-    group_type: billingProgram === "Intensivo" ? "integral" : "regular",
-    level_id: value(formData, "level_id") || null,
-    coach_profile_id: value(formData, "coach_profile_id") || null,
-    capacity,
-    monthly_fee_cents: rate.amount_cents,
-  }).eq("id", groupId);
-  const { error: slotError } = await supabase.from("group_schedule_slots").update({
-    weekday: safeDay,
-    starts_at: startsAt,
-    ends_at: endsAt,
-  }).eq("id", slotId).eq("group_id", groupId);
-
-  if (groupError || slotError) {
-    redirect(`${returnUrl}&error=No+pudimos+guardar+los+cambios`);
-  }
-  revalidatePath("/");
-  revalidatePath("/grupos");
-  revalidatePath(`/grupos/${groupId}`);
-  redirect(`${returnUrl}&quick_updated=1`);
-}
-
 export async function updateGroup(formData: FormData) {
   const groupId = value(formData, "group_id");
   const name = value(formData, "name");
@@ -360,11 +295,20 @@ export async function permanentlyDeleteGroup(formData: FormData) {
 export async function enrollGymnast(formData: FormData) {
   const groupId = value(formData, "group_id");
   const gymnastId = value(formData, "gymnast_id");
+  const returnDay = Number(value(formData, "return_day"));
+  const listReturn = Number.isInteger(returnDay) && returnDay >= 1 && returnDay <= 7
+    ? `/grupos?day=${returnDay}`
+    : "";
+  const returnUrl = listReturn || `/grupos/${groupId}`;
   if (!groupId || !gymnastId) {
-    redirect(`/grupos/${groupId}?error=Selecciona+una+gimnasta`);
+    redirect(`${returnUrl}${listReturn ? "&" : "?"}error=Selecciona+una+gimnasta`);
   }
 
   const supabase = await createClient();
+  const profile = await getCurrentStaffProfile();
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(`${returnUrl}${listReturn ? "&" : "?"}error=No+tienes+permiso+para+agregar+gimnastas`);
+  }
   const [{ data: group }, { count }, { data: auth }, { data: gymnast }] = await Promise.all([
     supabase
       .from("training_groups")
@@ -386,10 +330,10 @@ export async function enrollGymnast(formData: FormData) {
 
   if (!group) redirect("/grupos?error=Grupo+no+encontrado");
   if (!gymnast || gymnast.status === "retired") {
-    redirect(`/grupos/${groupId}?error=La+gimnasta+no+está+disponible+para+un+grupo`);
+    redirect(`${returnUrl}${listReturn ? "&" : "?"}error=La+gimnasta+no+está+disponible+para+un+grupo`);
   }
   if ((count ?? 0) >= group.capacity) {
-    redirect(`/grupos/${groupId}?error=El+grupo+ya+alcanzó+su+cupo+máximo`);
+    redirect(`${returnUrl}${listReturn ? "&" : "?"}error=El+grupo+ya+alcanzó+su+cupo+máximo`);
   }
 
   const { error } = await supabase.from("enrollments").insert({
@@ -406,7 +350,7 @@ export async function enrollGymnast(formData: FormData) {
       error.code === "23505"
         ? "La gimnasta ya pertenece a un grupo activo"
         : "No pudimos asignar la gimnasta";
-    redirect(`/grupos/${groupId}?error=${encodeURIComponent(message)}`);
+    redirect(`${returnUrl}${listReturn ? "&" : "?"}error=${encodeURIComponent(message)}`);
   }
 
   const weeklyDays = new Set(
@@ -427,15 +371,23 @@ export async function enrollGymnast(formData: FormData) {
   revalidatePath("/grupos");
   revalidatePath("/pagos/frecuencias");
   revalidatePath(`/grupos/${groupId}`);
-  redirect(`/grupos/${groupId}?assigned=1`);
+  redirect(listReturn ? `${listReturn}&participant_added=1` : `/grupos/${groupId}?assigned=1`);
 }
 
 export async function endEnrollment(formData: FormData) {
   const groupId = value(formData, "group_id");
   const enrollmentId = value(formData, "enrollment_id");
+  const returnDay = Number(value(formData, "return_day"));
+  const listReturn = Number.isInteger(returnDay) && returnDay >= 1 && returnDay <= 7
+    ? `/grupos?day=${returnDay}`
+    : "";
   if (!groupId || !enrollmentId) redirect("/grupos");
 
   const supabase = await createClient();
+  const profile = await getCurrentStaffProfile();
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(listReturn ? `${listReturn}&error=No+tienes+permiso+para+retirar+gimnastas` : `/grupos/${groupId}?error=No+tienes+permiso+para+retirar+gimnastas`);
+  }
   const { error } = await supabase
     .from("enrollments")
     .update({
@@ -446,13 +398,13 @@ export async function endEnrollment(formData: FormData) {
     .eq("group_id", groupId);
 
   if (error) {
-    redirect(`/grupos/${groupId}?error=No+pudimos+retirar+la+gimnasta`);
+    redirect(listReturn ? `${listReturn}&error=No+pudimos+retirar+la+gimnasta` : `/grupos/${groupId}?error=No+pudimos+retirar+la+gimnasta`);
   }
 
   revalidatePath("/");
   revalidatePath("/grupos");
   revalidatePath(`/grupos/${groupId}`);
-  redirect(`/grupos/${groupId}?removed=1`);
+  redirect(listReturn ? `${listReturn}&participant_removed=1` : `/grupos/${groupId}?removed=1`);
 }
 
 export async function updateEnrollmentStatus(formData: FormData) {
@@ -461,16 +413,20 @@ export async function updateEnrollmentStatus(formData: FormData) {
   const participationStatus = value(formData, "participation_status");
   const statusNote = value(formData, "status_note");
   const filter = value(formData, "return_filter") || "all";
+  const returnDay = Number(value(formData, "return_day"));
+  const listReturn = Number.isInteger(returnDay) && returnDay >= 1 && returnDay <= 7
+    ? `/grupos?day=${returnDay}`
+    : "";
   const allowed = ["active", "vacation", "paused", "injured", "pending"];
 
   if (!groupId || !enrollmentId || !allowed.includes(participationStatus)) {
-    redirect(`/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
+    redirect(listReturn ? `${listReturn}&error=No+pudimos+actualizar+el+estado` : `/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
   }
 
   const supabase = await createClient();
   const profile = await getCurrentStaffProfile();
   if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
-    redirect(`/grupos/${groupId}?error=No+tienes+permiso+para+cambiar+el+estado`);
+    redirect(listReturn ? `${listReturn}&error=No+tienes+permiso+para+cambiar+el+estado` : `/grupos/${groupId}?error=No+tienes+permiso+para+cambiar+el+estado`);
   }
 
   const { error } = await supabase
@@ -483,8 +439,8 @@ export async function updateEnrollmentStatus(formData: FormData) {
     .eq("group_id", groupId)
     .eq("active", true);
 
-  if (error) redirect(`/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
+  if (error) redirect(listReturn ? `${listReturn}&error=No+pudimos+actualizar+el+estado` : `/grupos/${groupId}?error=No+pudimos+actualizar+el+estado`);
   revalidatePath(`/grupos/${groupId}`);
   revalidatePath(`/asistencia/${groupId}`);
-  redirect(`/grupos/${groupId}?status_updated=1&filter=${encodeURIComponent(filter)}`);
+  redirect(listReturn ? `${listReturn}&participant_updated=1` : `/grupos/${groupId}?status_updated=1&filter=${encodeURIComponent(filter)}`);
 }

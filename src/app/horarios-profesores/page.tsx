@@ -131,15 +131,6 @@ export default async function StaffSchedulePage({
           </form>
         </details>
 
-        <nav className={styles.viewTabs}>
-          <Link href={`/horarios-profesores?date=${selectedDate}`} className={!query.view ? styles.active : ""}>
-            Por grupos
-          </Link>
-          <Link href={`/horarios-profesores?date=${selectedDate}&view=profesores`} className={query.view === "profesores" ? styles.active : ""}>
-            Resumen por profesora
-          </Link>
-        </nav>
-
         {slots.length === 0 ? (
           <div className="data-panel table-empty">
             <span>▦</span>
@@ -147,106 +138,70 @@ export default async function StaffSchedulePage({
             <p>Puedes agregar el día desde la edición de un grupo.</p>
             <Link href="/grupos">Ir a grupos y horarios</Link>
           </div>
-        ) : query.view === "profesores" ? (
-          <div className={styles.teacherBoard}>
-            {staff.map((person) => {
-              const teacherSlots = slots.filter((slot) => {
-                const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
-                const assignment = assignments.get(slot.id);
-                return (assignment?.coach_profile_id ?? group?.coach_profile_id) === person.id
-                  || assignment?.assistant_profile_id === person.id;
-              });
-              if (teacherSlots.length === 0) return null;
-              return (
-                <article key={person.id}>
-                  <div className={styles.teacherHeading}>
-                    <span>{person.full_name.slice(0, 1)}</span>
-                    <div><strong>{person.full_name}</strong><small>{teacherSlots.length} bloques asignados</small></div>
-                  </div>
-                  {teacherSlots.map((slot) => {
-                    const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
-                    return (
-                      <div className={styles.teacherSlot} key={slot.id}>
-                        <strong>{formatClubTime(slot.starts_at)}–{formatClubTime(slot.ends_at)}</strong>
-                        <span>{group?.name}</span>
-                        <small>{slot.location || "Sede principal"}</small>
-                      </div>
-                    );
-                  })}
-                </article>
-              );
-            })}
-          </div>
         ) : (
-          <div className={styles.scheduleList}>
-            <div className={styles.listHead}>
-              <span>Hora</span><span>Grupo</span><span>Principal</span><span>Apoyo</span><span>Novedad</span><span />
-            </div>
-            {slots.map((slot) => {
-              const group = Array.isArray(slot.training_groups)
-                ? slot.training_groups[0]
-                : slot.training_groups;
-              const level = Array.isArray(group?.levels) ? group?.levels[0] : group?.levels;
-              const assignment = assignments.get(slot.id);
-              const selectedCoach = assignment
-                ? assignment.coach_profile_id ?? ""
-                : group?.coach_profile_id ?? "";
-              const selectedAssistant = assignment?.assistant_profile_id ?? "";
-              const levelName = level?.name ?? "";
-              const leadIds = recommendedFor(levelName, "lead");
-              const supportIds = recommendedFor(levelName, "support");
-              const leadStaff = staff.filter((person) => leadIds.has(person.id));
-              const otherStaff = staff.filter((person) => !leadIds.has(person.id));
-              const supportStaff = staff.filter((person) => supportIds.has(person.id));
-              const otherSupport = staff.filter((person) => !supportIds.has(person.id));
-              return (
-                <form action={saveDailyAssignment} className={styles.scheduleRow} key={slot.id}>
-                  <input type="hidden" name="work_date" value={selectedDate} />
-                  <input type="hidden" name="group_id" value={slot.group_id} />
-                  <input type="hidden" name="schedule_slot_id" value={slot.id} />
-                  <div className={styles.time}>
-                    <strong>{formatClubTime(slot.starts_at)}</strong>
-                    <small>{formatClubTime(slot.ends_at)}</small>
-                  </div>
-                  <div className={styles.group}>
-                    <strong>{group?.name}</strong>
-                    <small>{level?.name ?? "Sin nivel"} · {slot.location || "Sede principal"}</small>
-                  </div>
-                  <label>
-                    <span>Profesora del día</span>
-                    <select name="coach_profile_id" defaultValue={selectedCoach}>
-                      <option value="">Sin asignar</option>
-                      {leadStaff.length > 0 && <optgroup label={`Recomendados para ${levelName}`}>
-                        {leadStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
-                      </optgroup>}
-                      <optgroup label="Otros disponibles">
-                        {otherStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
-                      </optgroup>
-                    </select>
-                    {!assignment && group?.coach_profile_id && (
-                      <small>Habitual: {staffNames.get(group.coach_profile_id) ?? "Profesora asignada"}</small>
-                    )}
-                  </label>
-                  <label>
-                    <span>Profesor de apoyo</span>
-                    <select name="assistant_profile_id" defaultValue={selectedAssistant}>
-                      <option value="">Sin apoyo</option>
-                      {supportStaff.length > 0 && <optgroup label={`Apoyos recomendados para ${levelName}`}>
-                        {supportStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
-                      </optgroup>}
-                      <optgroup label="Otros disponibles">
-                        {otherSupport.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}
-                      </optgroup>
-                    </select>
-                  </label>
-                  <label>
-                    <span>Novedad o instrucción</span>
-                    <input name="notes" defaultValue={assignment?.notes ?? ""} placeholder="Ej. reemplazo por ausencia" />
-                  </label>
-                  <button type="submit">{assignment ? "Actualizar" : "Asignar"}</button>
-                </form>
-              );
-            })}
+          <div className={styles.planningGrid}>
+            <section className={styles.groupsColumn}>
+              <div className={styles.columnHeading}>
+                <div><span className="section-kicker">Horario del día</span><h2>Grupos y asignaciones</h2></div>
+                <small>{slots.length} bloques</small>
+              </div>
+              <div className={styles.scheduleList}>
+                {slots.map((slot) => {
+                  const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
+                  const level = Array.isArray(group?.levels) ? group?.levels[0] : group?.levels;
+                  const assignment = assignments.get(slot.id);
+                  const selectedCoach = assignment ? assignment.coach_profile_id ?? "" : group?.coach_profile_id ?? "";
+                  const selectedAssistant = assignment?.assistant_profile_id ?? "";
+                  const levelName = level?.name ?? "";
+                  const leadIds = recommendedFor(levelName, "lead");
+                  const supportIds = recommendedFor(levelName, "support");
+                  const leadStaff = staff.filter((person) => leadIds.has(person.id));
+                  const otherStaff = staff.filter((person) => !leadIds.has(person.id));
+                  const supportStaff = staff.filter((person) => supportIds.has(person.id));
+                  const otherSupport = staff.filter((person) => !supportIds.has(person.id));
+                  return (
+                    <form action={saveDailyAssignment} className={styles.scheduleCard} key={slot.id}>
+                      <input type="hidden" name="work_date" value={selectedDate} />
+                      <input type="hidden" name="group_id" value={slot.group_id} />
+                      <input type="hidden" name="schedule_slot_id" value={slot.id} />
+                      <div className={styles.cardIdentity}>
+                        <div className={styles.time}><strong>{formatClubTime(slot.starts_at)}</strong><small>hasta {formatClubTime(slot.ends_at)}</small></div>
+                        <div className={styles.group}><strong>{group?.name}</strong><small>{level?.name ?? "Sin nivel"}</small></div>
+                      </div>
+                      <div className={styles.assignmentFields}>
+                        <label><span>Principal</span><select name="coach_profile_id" defaultValue={selectedCoach}><option value="">Sin asignar</option>{leadStaff.length > 0 && <optgroup label={`Recomendados para ${levelName}`}>{leadStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</optgroup>}<optgroup label="Otros disponibles">{otherStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</optgroup></select>{!assignment && group?.coach_profile_id && <small>Habitual: {staffNames.get(group.coach_profile_id) ?? "Asignada"}</small>}</label>
+                        <label><span>Apoyo</span><select name="assistant_profile_id" defaultValue={selectedAssistant}><option value="">Sin apoyo</option>{supportStaff.length > 0 && <optgroup label={`Recomendados para ${levelName}`}>{supportStaff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</optgroup>}<optgroup label="Otros disponibles">{otherSupport.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</optgroup></select></label>
+                        <label className={styles.noteField}><span>Novedad</span><input name="notes" defaultValue={assignment?.notes ?? ""} placeholder="Ausencia, reemplazo…" /></label>
+                        <button type="submit">{assignment ? "Guardar cambio" : "Asignar"}</button>
+                      </div>
+                    </form>
+                  );
+                })}
+              </div>
+            </section>
+
+            <aside className={styles.staffColumn}>
+              <div className={styles.columnHeading}>
+                <div><span className="section-kicker">Equipo disponible</span><h2>Profesores del día</h2></div>
+                <small>{staff.length} personas</small>
+              </div>
+              <div className={styles.staffList}>
+                {staff.map((person) => {
+                  const teacherSlots = slots.filter((slot) => {
+                    const group = Array.isArray(slot.training_groups) ? slot.training_groups[0] : slot.training_groups;
+                    const assignment = assignments.get(slot.id);
+                    return (assignment?.coach_profile_id ?? group?.coach_profile_id) === person.id || assignment?.assistant_profile_id === person.id;
+                  });
+                  return (
+                    <article className={teacherSlots.length ? styles.staffBusy : styles.staffFree} key={person.id}>
+                      <span className={styles.staffAvatar}>{person.full_name.slice(0, 1)}</span>
+                      <div><strong>{person.full_name}</strong><small>{teacherSlots.length ? `${teacherSlots.length} ${teacherSlots.length === 1 ? "grupo asignado" : "grupos asignados"}` : "Disponible"}</small></div>
+                      <div className={styles.staffTimes}>{teacherSlots.map((slot) => <span key={slot.id}>{formatClubTime(slot.starts_at)}</span>)}</div>
+                    </article>
+                  );
+                })}
+              </div>
+            </aside>
           </div>
         )}
       </section>

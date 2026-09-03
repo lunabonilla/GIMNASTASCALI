@@ -92,6 +92,68 @@
   background: white;
 }
 
+.planningGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, .65fr);
+  align-items: start;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.groupsColumn,
+.staffColumn {
+  min-width: 0;
+}
+
+.columnHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.columnHeading h2 { margin: 3px 0 0; font-size: 19px; }
+.columnHeading > small { border-radius: 999px; color: #6d2b99; background: #f0e5f6; padding: 5px 8px; font-size: 8px; font-weight: 850; }
+
+.scheduleCard {
+  display: grid;
+  grid-template-columns: minmax(170px, .7fr) minmax(0, 1.5fr);
+  gap: 16px;
+  border-top: 1px solid #eee9f0;
+  padding: 15px;
+}
+
+.scheduleCard:first-child { border-top: 0; }
+.cardIdentity { display: grid; align-content: start; gap: 10px; }
+.assignmentFields { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.assignmentFields label { display: grid; gap: 4px; }
+.assignmentFields label > span { color: #8b8190; font-size: 8px; font-weight: 850; text-transform: uppercase; }
+.assignmentFields select,
+.assignmentFields input { width: 100%; min-width: 0; height: 38px; border: 1px solid #ddd5e2; border-radius: 9px; background: white; padding: 8px; }
+.assignmentFields label small { color: #948a98; font-size: 8px; }
+.assignmentFields .noteField { grid-column: 1 / -1; }
+.assignmentFields button { justify-self: end; grid-column: 1 / -1; border: 0; border-radius: 9px; color: white; background: #652991; padding: 9px 13px; font-size: 9px; font-weight: 850; cursor: pointer; }
+
+.staffColumn {
+  position: sticky;
+  top: 16px;
+  border: 1px solid #e5deea;
+  border-radius: 16px;
+  background: #faf8fb;
+  padding: 15px;
+}
+
+.staffList { display: grid; gap: 7px; }
+.staffList article { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 9px; border: 1px solid #e8e2eb; border-radius: 11px; background: white; padding: 9px; }
+.staffAvatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #682992; background: #eee3f5; font-weight: 900; }
+.staffList article > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.staffList strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.staffList small { color: #8f8593; font-size: 8px; }
+.staffList .staffFree small { color: #2f7759; font-weight: 800; }
+.staffTimes { align-items: flex-end; }
+.staffTimes span { border-radius: 6px; color: #684078; background: #f2e9f7; padding: 3px 5px; font-size: 7px; font-weight: 850; }
+
 .listHead,
 .scheduleRow {
   display: grid;
@@ -226,6 +288,9 @@
 }
 
 @media (max-width: 900px) {
+  .planningGrid { grid-template-columns: 1fr; }
+  .staffColumn { position: static; }
+  .staffList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .listHead {
     display: none;
   }
@@ -272,4 +337,10 @@
   .teacherBoard {
     grid-template-columns: 1fr;
   }
+
+  .scheduleCard { grid-template-columns: 1fr; }
+  .assignmentFields { grid-template-columns: 1fr; }
+  .assignmentFields .noteField { grid-column: auto; }
+  .assignmentFields button { width: 100%; grid-column: auto; }
+  .staffList { grid-template-columns: 1fr; }
 }
