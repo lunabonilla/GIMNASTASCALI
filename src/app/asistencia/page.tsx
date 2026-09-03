@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatClubTime } from "@/lib/format";
+
+const weekdayLabels: Record<number, string> = {
+  1: "Lunes",
+  2: "Martes",
+  3: "Miércoles",
+  4: "Jueves",
+  5: "Viernes",
+  6: "Sábado",
+  7: "Domingo",
+};
 
 export default async function AttendancePage() {
   const supabase = await createClient();
@@ -45,6 +56,9 @@ export default async function AttendancePage() {
           <div className="attendance-group-list">
             {groups.map((group) => {
               const groupLevel = Array.isArray(group.levels) ? group.levels[0] : group.levels;
+              const schedules = [...group.group_schedule_slots].sort((first, second) =>
+                first.weekday - second.weekday || first.starts_at.localeCompare(second.starts_at),
+              );
               return (
               <Link href={`/asistencia/${group.id}`} className="attendance-group-card" key={group.id}>
                 <span className="attendance-check">✓</span>
@@ -52,6 +66,14 @@ export default async function AttendancePage() {
                   <small>{groupLevel?.name ?? "Sin nivel"}</small>
                   <h2>{group.name}</h2>
                   <p>{group.staff_profiles?.[0]?.full_name ?? "Sin profesora asignada"}</p>
+                </div>
+                <div className="attendance-group-times">
+                  <small>Hora de inicio</small>
+                  {schedules.length ? schedules.map((schedule) => (
+                    <strong key={`${schedule.weekday}-${schedule.starts_at}`}>
+                      {weekdayLabels[schedule.weekday]} · {formatClubTime(schedule.starts_at)}
+                    </strong>
+                  )) : <strong>Sin horario</strong>}
                 </div>
                 <strong>{group.enrollments.length} gimnastas</strong>
                 <i>→</i>
