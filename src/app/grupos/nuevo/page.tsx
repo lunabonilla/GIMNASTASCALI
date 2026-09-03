@@ -4,30 +4,33 @@ import { createClient } from "@/lib/supabase/server";
 import { createGroup } from "../actions";
 import { ProgramDurationSelect } from "../program-duration-select";
 
-export default async function NewGroupPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function NewGroupPage({ searchParams }: { searchParams: Promise<{ error?: string; day?: string }> }) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth?.claims) redirect("/login");
 
-  const [{ data: levelsData }, { data: staffData }, { error }] = await Promise.all([
+  const [{ data: levelsData }, { data: staffData }, messages] = await Promise.all([
     supabase.from("levels").select("id, name").eq("active", true).order("sort_order"),
     supabase.from("staff_profiles").select("id, full_name, role").eq("active", true).order("full_name"),
     searchParams,
   ]);
+  const requestedDay = Number(messages.day);
+  const selectedDay = Number.isInteger(requestedDay) && requestedDay >= 1 && requestedDay <= 7 ? requestedDay : 1;
   const levels = (levelsData ?? []) as Array<{ id: string; name: string }>;
   const staff = (staffData ?? []) as Array<{ id: string; full_name: string; role: string }>;
 
   return (
     <main className="form-page">
       <div className="form-card wide-form">
-        <Link href="/grupos" className="back-link">← Volver a grupos</Link>
+        <Link href={`/grupos?day=${selectedDay}`} className="back-link">← Volver a grupos</Link>
         <div className="form-heading">
           <span className="section-kicker">Nuevo grupo</span>
           <h1>Crear grupo y horario</h1>
           <p>Selecciona el programa, los días y un horario compartido para crear la clase completa.</p>
         </div>
-        {error && <div className="error-banner">{error}</div>}
+        {messages.error && <div className="error-banner">{messages.error}</div>}
         <form action={createGroup} className="gymnast-form">
+          <input type="hidden" name="return_day" value={selectedDay} />
           <fieldset>
             <legend>Información del grupo</legend>
             <div className="form-grid">
@@ -52,7 +55,7 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
                     [4, "Jueves"], [5, "Viernes"], [6, "Sábado"], [7, "Domingo"],
                   ].map(([day, label]) => (
                     <label key={day}>
-                      <input type="checkbox" name="weekdays" value={day} />
+                      <input type="checkbox" name="weekdays" value={day} defaultChecked={day === selectedDay} />
                       <span>{label}</span>
                     </label>
                   ))}
@@ -63,7 +66,7 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
             </div>
           </fieldset>
           <div className="form-actions">
-            <Link href="/grupos">Cancelar</Link>
+            <Link href={`/grupos?day=${selectedDay}`}>Cancelar</Link>
             <button type="submit" className="primary-button">Crear grupo</button>
           </div>
         </form>

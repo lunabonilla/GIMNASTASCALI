@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatClubTime } from "@/lib/format";
+import { quickUpdateGroup } from "./actions";
 import styles from "./page.module.css";
 
 const days = [
@@ -31,6 +32,8 @@ type Group = {
   id: string;
   name: string;
   billing_program: string | null;
+  level_id: string | null;
+  coach_profile_id: string | null;
   capacity: number;
   active: boolean;
   levels: { name: string } | Array<{ name: string }> | null;
@@ -54,6 +57,8 @@ export default async function GroupsPage({
     archived?: string;
     permanently_deleted?: string;
     missing?: string;
+    quick_updated?: string;
+    error?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -75,11 +80,17 @@ export default async function GroupsPage({
     ? requestedDay
     : actualWeekday;
 
-  const { data, error } = await supabase
-    .from("training_groups")
-    .select("id, name, billing_program, capacity, active, levels(name), staff_profiles(full_name), group_schedule_slots(id, weekday, starts_at, ends_at), enrollments(id, active, participation_status, gymnasts(first_name, last_name))")
-    .order("name");
+  const [{ data, error }, { data: levelsData }, { data: staffData }] = await Promise.all([
+    supabase
+      .from("training_groups")
+      .select("id, name, billing_program, level_id, coach_profile_id, capacity, active, levels(name), staff_profiles(full_name), group_schedule_slots(id, weekday, starts_at, ends_at), enrollments(id, active, participation_status, gymnasts(first_name, last_name))")
+      .order("name"),
+    supabase.from("levels").select("id, name").eq("active", true).order("sort_order"),
+    supabase.from("staff_profiles").select("id, full_name").eq("active", true).order("full_name"),
+  ]);
   const groups = (data ?? []) as Group[];
+  const levels = (levelsData ?? []) as Array<{ id: string; name: string }>;
+  const staff = (staffData ?? []) as Array<{ id: string; full_name: string }>;
   const dayCounts = new Map<number, number>();
   for (const group of groups) {
     for (const weekday of new Set(group.group_schedule_slots.map((slot) => slot.weekday))) {
@@ -105,7 +116,7 @@ export default async function GroupsPage({
           <h1>Grupos y horarios</h1>
           <p>Tablero semanal de grupos, horarios y gimnastas.</p>
         </div>
-        <Link href="/grupos/nuevo" className="primary-button">＋ Crear grupo</Link>
+        <Link href={`/grupos/nuevo?day=${selectedDay}`} className="primary-button">＋ Crear grupo</Link>
       </header>
 
       <section className="module-content">
@@ -114,6 +125,8 @@ export default async function GroupsPage({
         {params.permanently_deleted && <div className="success-banner">✓ Grupo eliminado definitivamente.</div>}
         {params.archived && <div className="success-banner">✓ Grupo desactivado; su historial quedó protegido.</div>}
         {params.missing && <div className="info-banner">Ese grupo ya no existe. Te devolvimos al listado de horarios.</div>}
+        {params.quick_updated && <div className="success-banner">✓ Cambios guardados sin salir del horario.</div>}
+        {params.error && <div className="error-banner">{params.error}</div>}
 
         <nav className={styles.dayTabs} aria-label="Días de la semana">
           {days.map(([day, label]) => (
@@ -147,7 +160,7 @@ export default async function GroupsPage({
           <div className="data-panel table-empty">
             <span>▦</span><h3>Aún no hay grupos</h3>
             <p>Crea el primer grupo para organizar los entrenamientos.</p>
-            <Link href="/grupos/nuevo">Crear primer grupo</Link>
+            <Link href={`/grupos/nuevo?day=${selectedDay}`}>Crear primer grupo</Link>
           </div>
         ) : cards.length === 0 ? (
           <div className="data-panel table-empty">
@@ -196,6 +209,22 @@ export default async function GroupsPage({
                   </div>
                   <footer>
                     {!group.active && <span>Grupo inactivo</span>}
+                    <details className={styles.quickEditor}>
+                      <summary>Editar rápido</summary>
+                      <form action={quickUpdateGroup}>
+                        <input type="hidden" name="group_id" value={group.id} />
+                        <input type="hidden" name="slot_id" value={slot.id} />
+                        <label className={styles.fullField}>Nombre<input name="name" defaultValue={group.name} required /></label>
+                        <label>Programa<select name="billing_program" defaultValue={group.billing_program ?? "Regular"}><option>Minis</option><option>Regular</option><option>Intensivo</option></select></label>
+                        <label>Nivel<select name="level_id" defaultValue={group.level_id ?? ""}><option value="">Sin nivel</option>{levels.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
+                        <label className={styles.fullField}>Profesora<select name="coach_profile_id" defaultValue={group.coach_profile_id ?? ""}><option value="">Sin asignar</option>{staff.map((person) => <option value={person.id} key={person.id}>{person.full_name}</option>)}</select></label>
+                        <label>Día<select name="weekday" defaultValue={slot.weekday}>{days.map(([day, label]) => <option value={day} key={day}>{label}</option>)}</select></label>
+                        <label>Inicio<input name="starts_at" type="time" defaultValue={slot.starts_at.slice(0, 5)} required /></label>
+                        <label>Final<input name="ends_at" type="time" defaultValue={slot.ends_at.slice(0, 5)} required /></label>
+                        <label>Cupos<input name="capacity" type="number" min="1" defaultValue={group.capacity} required /></label>
+                        <button type="submit">Guardar cambios</button>
+                      </form>
+                    </details>
                     <Link href={`/grupos/${group.id}`}>Ver y administrar <span aria-hidden="true">→</span></Link>
                   </footer>
                 </article>

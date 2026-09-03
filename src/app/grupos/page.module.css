@@ -270,6 +270,84 @@
   text-decoration: none;
 }
 
+.quickEditor {
+  position: relative;
+}
+
+.quickEditor > summary {
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid #d9c8e5;
+  border-radius: 8px;
+  color: #672a93;
+  background: #faf6fc;
+  font-size: 9px;
+  font-weight: 850;
+  padding: 7px 9px;
+}
+
+.quickEditor > summary::-webkit-details-marker { display: none; }
+
+.quickEditor[open] {
+  width: 100%;
+  order: 3;
+}
+
+.quickEditor[open] > summary {
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+.quickEditor form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  border-radius: 12px;
+  background: #f8f3fb;
+  padding: 12px;
+}
+
+.quickEditor label {
+  display: grid;
+  gap: 4px;
+  color: #766b7d;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.quickEditor input,
+.quickEditor select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid #ded4e4;
+  border-radius: 8px;
+  color: #34293a;
+  background: white;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+.quickEditor .fullField { grid-column: 1 / -1; }
+
+.quickEditor button {
+  align-self: end;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  background: #672a93;
+  font-size: 9px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.quickEditor[open] + a { display: none; }
+
+.groupNote footer:has(.quickEditor[open]) {
+  flex-wrap: wrap;
+}
+
 @media (max-width: 950px) {
   .scheduleBoard {
     grid-template-columns: repeat(2, minmax(0, 1fr));

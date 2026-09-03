@@ -18,6 +18,11 @@ export async function createGroup(formData: FormData) {
     .filter((day) => Number.isInteger(day) && day >= 1 && day <= 7);
   const startsAt = value(formData, "starts_at");
   const endsAt = value(formData, "ends_at");
+  const returnDay = Number(value(formData, "return_day"));
+  const safeReturnDay = Number.isInteger(returnDay) && returnDay >= 1 && returnDay <= 7
+    ? returnDay
+    : weekdays[0] ?? 1;
+  const newGroupUrl = `/grupos/nuevo?day=${safeReturnDay}`;
 
   if (
     !name ||
@@ -28,19 +33,19 @@ export async function createGroup(formData: FormData) {
     weekdays.length === 0 ||
     !["Minis", "Regular", "Intensivo"].includes(billingProgram)
   ) {
-    redirect("/grupos/nuevo?error=Completa+los+campos+obligatorios");
+    redirect(`${newGroupUrl}&error=Completa+los+campos+obligatorios`);
   }
   if (billingProgram !== "Intensivo" && weekdays.length > 2) {
-    redirect("/grupos/nuevo?error=Minis+y+Regular+admiten+máximo+2+días+semanales");
+    redirect(`${newGroupUrl}&error=Minis+y+Regular+admiten+máximo+2+días+semanales`);
   }
   if (endsAt <= startsAt) {
-    redirect("/grupos/nuevo?error=La+hora+de+finalización+debe+ser+posterior");
+    redirect(`${newGroupUrl}&error=La+hora+de+finalización+debe+ser+posterior`);
   }
 
   const supabase = await createClient();
   const profile = await getCurrentStaffProfile();
   if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
-    redirect("/grupos/nuevo?error=No+tienes+permiso+para+crear+grupos");
+    redirect(`${newGroupUrl}&error=No+tienes+permiso+para+crear+grupos`);
   }
 
   let rateQuery = supabase
@@ -54,7 +59,7 @@ export async function createGroup(formData: FormData) {
     : rateQuery.eq("days_per_week", weekdays.length);
   const { data: rate } = await rateQuery.single();
   if (!rate) {
-    redirect("/grupos/nuevo?error=No+encontramos+la+tarifa+para+este+programa+y+frecuencia");
+    redirect(`${newGroupUrl}&error=No+encontramos+la+tarifa+para+este+programa+y+frecuencia`);
   }
 
   const { data: group, error: groupError } = await supabase
@@ -74,7 +79,7 @@ export async function createGroup(formData: FormData) {
     .single();
 
   if (groupError || !group) {
-    redirect("/grupos/nuevo?error=No+pudimos+crear+el+grupo");
+    redirect(`${newGroupUrl}&error=No+pudimos+crear+el+grupo`);
   }
 
   const { error: scheduleError } = await supabase
@@ -88,12 +93,77 @@ export async function createGroup(formData: FormData) {
     })));
   if (scheduleError) {
     await supabase.from("training_groups").delete().eq("id", group.id);
-    redirect("/grupos/nuevo?error=No+pudimos+guardar+el+horario");
+    redirect(`${newGroupUrl}&error=No+pudimos+guardar+el+horario`);
   }
 
   revalidatePath("/");
   revalidatePath("/grupos");
-  redirect("/grupos?created=1");
+  redirect(`/grupos?day=${safeReturnDay}&created=1`);
+}
+
+export async function quickUpdateGroup(formData: FormData) {
+  const groupId = value(formData, "group_id");
+  const slotId = value(formData, "slot_id");
+  const name = value(formData, "name");
+  const billingProgram = value(formData, "billing_program");
+  const startsAt = value(formData, "starts_at");
+  const endsAt = value(formData, "ends_at");
+  const capacity = Number(value(formData, "capacity"));
+  const day = Number(value(formData, "weekday"));
+  const safeDay = Number.isInteger(day) && day >= 1 && day <= 7 ? day : 1;
+  const returnUrl = `/grupos?day=${safeDay}`;
+
+  if (!groupId || !slotId || !name || !startsAt || !endsAt || endsAt <= startsAt ||
+      !Number.isInteger(capacity) || capacity < 1 ||
+      !["Minis", "Regular", "Intensivo"].includes(billingProgram)) {
+    redirect(`${returnUrl}&error=Revisa+los+datos+de+la+edición+rápida`);
+  }
+
+  const supabase = await createClient();
+  const [profile, { count: occupied }, { count: weeklyDays }] = await Promise.all([
+    getCurrentStaffProfile(),
+    supabase.from("enrollments").select("*", { count: "exact", head: true })
+      .eq("group_id", groupId).eq("active", true),
+    supabase.from("group_schedule_slots").select("weekday", { count: "exact", head: true })
+      .eq("group_id", groupId),
+  ]);
+  if (!profile?.active || !["superadmin", "administration"].includes(profile.role)) {
+    redirect(`${returnUrl}&error=No+tienes+permiso+para+editar+grupos`);
+  }
+  if (capacity < (occupied ?? 0)) {
+    redirect(`${returnUrl}&error=El+cupo+no+puede+ser+menor+a+las+gimnastas+actuales`);
+  }
+
+  let rateQuery = supabase.from("billing_rate_plans").select("amount_cents")
+    .eq("program", billingProgram).eq("effective_year", 2026).eq("active", true);
+  rateQuery = billingProgram === "Intensivo"
+    ? rateQuery.is("days_per_week", null)
+    : rateQuery.eq("days_per_week", Math.min(2, Math.max(1, weeklyDays ?? 1)));
+  const { data: rate } = await rateQuery.maybeSingle();
+  if (!rate) redirect(`${returnUrl}&error=No+encontramos+la+tarifa+del+programa`);
+
+  const { error: groupError } = await supabase.from("training_groups").update({
+    name,
+    billing_program: billingProgram,
+    group_type: billingProgram === "Intensivo" ? "integral" : "regular",
+    level_id: value(formData, "level_id") || null,
+    coach_profile_id: value(formData, "coach_profile_id") || null,
+    capacity,
+    monthly_fee_cents: rate.amount_cents,
+  }).eq("id", groupId);
+  const { error: slotError } = await supabase.from("group_schedule_slots").update({
+    weekday: safeDay,
+    starts_at: startsAt,
+    ends_at: endsAt,
+  }).eq("id", slotId).eq("group_id", groupId);
+
+  if (groupError || slotError) {
+    redirect(`${returnUrl}&error=No+pudimos+guardar+los+cambios`);
+  }
+  revalidatePath("/");
+  revalidatePath("/grupos");
+  revalidatePath(`/grupos/${groupId}`);
+  redirect(`${returnUrl}&quick_updated=1`);
 }
 
 export async function updateGroup(formData: FormData) {
