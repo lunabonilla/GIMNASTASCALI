@@ -61,22 +61,24 @@ export default async function AttendancePage() {
               );
               return (
               <Link href={`/asistencia/${group.id}`} className="attendance-group-card" key={group.id}>
-                <span className="attendance-check">✓</span>
-                <div>
+                <div className="attendance-card-topline">
                   <small>{groupLevel?.name ?? "Sin nivel"}</small>
+                  <span>{group.enrollments.length} gimnastas</span>
+                </div>
+                <div className="attendance-title-row">
                   <h2>{group.name}</h2>
+                  <div className="attendance-group-times">
+                    {schedules.length ? schedules.map((schedule) => (
+                      <strong key={`${schedule.weekday}-${schedule.starts_at}`}>
+                        {weekdayLabels[schedule.weekday].slice(0, 3)} · {formatClubTime(schedule.starts_at)}
+                      </strong>
+                    )) : <strong>Sin horario</strong>}
+                  </div>
+                </div>
+                <div className="attendance-card-footer">
                   <p>{group.staff_profiles?.[0]?.full_name ?? "Sin profesora asignada"}</p>
+                  <span>Tomar asistencia →</span>
                 </div>
-                <div className="attendance-group-times">
-                  <small>Hora de inicio</small>
-                  {schedules.length ? schedules.map((schedule) => (
-                    <strong key={`${schedule.weekday}-${schedule.starts_at}`}>
-                      {weekdayLabels[schedule.weekday]} · {formatClubTime(schedule.starts_at)}
-                    </strong>
-                  )) : <strong>Sin horario</strong>}
-                </div>
-                <strong>{group.enrollments.length} gimnastas</strong>
-                <i>→</i>
               </Link>
             );})}
           </div>

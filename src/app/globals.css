@@ -1703,19 +1703,20 @@ th {
 
 .attendance-group-list {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
   gap: 14px;
 }
 
 .attendance-group-card {
   display: grid;
-  grid-template-columns: 48px minmax(180px, 1fr) minmax(150px, auto) auto 25px;
-  align-items: center;
-  gap: 18px;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 17px;
+  border-radius: 15px;
   color: var(--ink);
-  background: var(--white);
-  padding: 20px 23px;
+  background: linear-gradient(145deg, #fff, #fcf9fd);
+  padding: 14px 15px;
   text-decoration: none;
 }
 
@@ -1724,15 +1725,29 @@ th {
   box-shadow: 0 10px 25px rgba(55, 27, 75, 0.07);
 }
 
-.attendance-check {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border-radius: 14px;
+.attendance-card-topline,
+.attendance-title-row,
+.attendance-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.attendance-card-topline > small {
   color: var(--purple);
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.attendance-card-topline > span {
+  border-radius: 999px;
+  color: #6b5875;
   background: var(--purple-soft);
-  font-weight: 900;
+  padding: 4px 7px;
+  font-size: 8px;
+  font-weight: 800;
 }
 
 .attendance-group-card h2,
@@ -1741,8 +1756,10 @@ th {
 }
 
 .attendance-group-card h2 {
-  margin: 3px 0 5px;
-  font-size: 18px;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
 }
 
 .attendance-group-card small,
@@ -1752,25 +1769,40 @@ th {
 }
 
 .attendance-group-times {
-  display: grid;
-  min-width: 150px;
-  gap: 3px;
-  border-left: 1px solid var(--line);
-  padding-left: 18px;
-}
-
-.attendance-group-times small {
-  margin-bottom: 2px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .attendance-group-times strong {
+  border: 1px solid #e2d3ec;
+  border-radius: 7px;
   color: var(--purple);
-  font-size: 11px;
+  background: #f8f1fc;
+  padding: 5px 7px;
+  font-size: 9px;
   white-space: nowrap;
+}
+
+.attendance-card-footer {
+  margin-top: 2px;
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+}
+
+.attendance-card-footer p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attendance-card-footer span {
+  flex: 0 0 auto;
+  color: var(--purple);
+  font-size: 9px;
+  font-weight: 850;
 }
 
 .attendance-card {
@@ -2291,21 +2323,31 @@ th {
 }
 
 @media (max-width: 650px) {
-  .attendance-group-card {
-    grid-template-columns: 42px 1fr;
+  .attendance-group-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
   }
 
-  .attendance-group-card > strong,
-  .attendance-group-card > i {
-    display: none;
+  .attendance-group-card {
+    padding: 12px;
+  }
+
+  .attendance-title-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .attendance-group-times {
-    grid-column: 2;
-    min-width: 0;
-    margin-top: 5px;
-    border-left: 0;
-    padding-left: 0;
+    justify-content: flex-start;
+  }
+
+  .attendance-card-footer span {
+    font-size: 0;
+  }
+
+  .attendance-card-footer span::after {
+    content: "Abrir →";
+    font-size: 9px;
   }
 
   .attendance-heading {
